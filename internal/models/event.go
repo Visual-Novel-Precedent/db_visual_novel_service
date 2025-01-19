@@ -6,6 +6,6 @@ type Event struct {
 	CharacterArrived   Character
 	CharacterDeparture Character
 	Sound              string
-	CharactersInEvent  map[int]Character // позиция - персонаж
+	CharactersInEvent  map[int64]map[float64]float64 // позиция - персонаж
 	Text               string
 }

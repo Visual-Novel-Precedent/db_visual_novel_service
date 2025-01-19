@@ -52,7 +52,7 @@ func UpdateNodeHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		err = nodeM.UpdateNode(req.Id, req.Slug, req.Events, req.Music, req.Background, req.Branching.Flag, req.Branching.Condition, req.End.Flag, req.End.EndResult, req.End.EndText, db)
+		err = nodeM.UpdateNodeValue(req.Id, req.Slug, req.Events, req.Music, req.Background, req.Branching.Flag, req.Branching.Condition, req.End.Flag, req.End.EndResult, req.End.EndText, db)
 
 		if err != nil {
 			http.Error(w, "fail to update node", http.StatusInternalServerError)

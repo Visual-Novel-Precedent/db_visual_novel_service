@@ -35,7 +35,7 @@ func CreateChapterHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		id, err := chapter.CreateChapter(req.Author, db)
+		id, err := chapter.CreateDefaultChapter(req.Author, db)
 
 		if err != nil {
 			http.Error(w, "fail to create chapter", http.StatusInternalServerError)

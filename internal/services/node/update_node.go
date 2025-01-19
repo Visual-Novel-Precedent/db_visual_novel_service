@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func UpdateNode(
+func UpdateNodeValue(
 	id int64,
 	slug string,
 	events []int64,

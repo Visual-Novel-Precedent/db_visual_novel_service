@@ -9,7 +9,7 @@ import (
 )
 
 type GetNodeByChapterIdRequest struct {
-	ChapterId []int64 `json:"chapter_id"`
+	ChapterId int64 `json:"chapter_id"`
 }
 
 func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {

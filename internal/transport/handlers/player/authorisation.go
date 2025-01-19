@@ -38,14 +38,19 @@ func PlayerAuthorisationHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Здесь должна быть логика получения данных пользователя
 		// Например, из базы данных:
-		id, chapters, status, name, err := player.Authorization(req.Email, req.Password, db)
+		player, err := player.Authorization(req.Email, req.Password, db)
+
+		if err != nil {
+			if err.Error() == "invalid password" {
+				http.Error(w, "invalid password", http.StatusForbidden)
+			}
+
+			http.Error(w, "error to get user", http.StatusInternalServerError)
+		}
 
 		// Формируем ответ
 		response := map[string]interface{}{
-			"id":               id,
-			"chaptersProgress": chapters,
-			"status":           status,
-			"name":             name,
+			"player": player,
 		}
 
 		// Отправляем ответ клиенту

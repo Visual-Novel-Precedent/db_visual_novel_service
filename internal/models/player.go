@@ -9,4 +9,5 @@ type Player struct {
 	Admin             bool
 	CompletedChapters []int64         // пройденные главы
 	ChaptersProgress  map[int64]int64 // Мапа id главы - id узла
+	SoundSettings     int             //percent
 }

@@ -11,6 +11,7 @@ func ChangePlayer(
 	email string,
 	phone string,
 	password string,
+	soundSettings int,
 	db *gorm.DB,
 ) error {
 	user, err := storage.SelectPlayerWIthId(db, id)
@@ -33,6 +34,10 @@ func ChangePlayer(
 
 	if password != "" {
 		user.Password = password
+	}
+
+	if soundSettings != -1 {
+		user.SoundSettings = soundSettings
 	}
 
 	_, err = storage.UpdatePlayer(db, id, user)

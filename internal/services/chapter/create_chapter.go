@@ -12,7 +12,7 @@ const (
 	DefaultStatus = 0
 )
 
-func CreateChapter(authorId int64, db *gorm.DB) (int64, error) {
+func CreateDefaultChapter(authorId int64, db *gorm.DB) (int64, error) {
 
 	id := generateUniqueId()
 

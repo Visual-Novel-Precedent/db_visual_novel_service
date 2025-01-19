@@ -50,6 +50,18 @@ func Registration(email string, name string, password string, db *gorm.DB) (int6
 		return 0, errors.New("fail to send registration requests to another admins")
 	}
 
+	_, err = storage.RegisterPlayer(db, models.Player{
+		Id:       id,
+		Name:     name,
+		Email:    email,
+		Password: password,
+		Admin:    true,
+	})
+
+	if err != nil {
+		return 0, errors.New("error to create player for admin")
+	}
+
 	return id, nil
 }
 

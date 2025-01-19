@@ -7,20 +7,18 @@ import (
 )
 
 func GetNodesById(
-	ids []int64,
+	id int64,
 	db *gorm.DB,
 ) ([]models.Node, error) {
 	var nodes []models.Node
 
-	for _, id := range ids {
-		node, err := storage.GetNodeById(db, id)
+	node, err := storage.GetNodeById(db, id)
 
-		if err != nil {
-			return nil, err
-		}
-
-		nodes = append(nodes, node)
+	if err != nil {
+		return nil, err
 	}
+
+	nodes = append(nodes, node)
 
 	return nodes, nil
 }

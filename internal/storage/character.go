@@ -23,6 +23,17 @@ func SelectCharacterWIthId(db *gorm.DB, id int64) (models.Character, error) {
 	return character, nil
 }
 
+func SelectCharacters(db *gorm.DB) ([]models.Character, error) {
+	var characters []models.Character
+	result := db.Find(&characters)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return characters, nil
+}
+
 func UpdateCharacter(db *gorm.DB, id int64, newCharacter models.Character) (models.Character, error) {
 	var character models.Character
 	result := db.Model(&character).Where("id = ?", id).Updates(newCharacter)
