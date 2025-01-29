@@ -1,7 +1,7 @@
 package models
 
 type Character struct {
-	Id       int64
+	ТС       int64
 	Name     string
 	Slug     string
 	Color    string

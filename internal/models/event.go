@@ -1,7 +1,7 @@
 package models
 
 type Event struct {
-	Index              int
+	Index              int64
 	Type               int // 0 - монолог героя или закадровый голос, 1- персонаж появилсяб 2 - перслнаж ушел, 3 - персонаж произносит речь
 	CharacterArrived   Character
 	CharacterDeparture Character

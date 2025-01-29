@@ -63,11 +63,11 @@ func main() {
 		handler := admin_.AdminAuthorisationHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
-	service.Router.HandleFunc("/admin-authorization", func(w http.ResponseWriter, r *http.Request) {
+	service.Router.HandleFunc("/admin-registration", func(w http.ResponseWriter, r *http.Request) {
 		handler := admin_.AdminRegistrationHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
-	service.Router.HandleFunc("/admin-authorization", func(w http.ResponseWriter, r *http.Request) {
+	service.Router.HandleFunc("/admin-achange", func(w http.ResponseWriter, r *http.Request) {
 		handler := admin_.ChangeAdminHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
@@ -120,6 +120,10 @@ func main() {
 	})
 	service.Router.HandleFunc("/update-character", func(w http.ResponseWriter, r *http.Request) {
 		handler := character.UpdateCharacterHandler(service.DB)
+		handler.ServeHTTP(w, r)
+	})
+	service.Router.HandleFunc("/get-characters", func(w http.ResponseWriter, r *http.Request) {
+		handler := character.GetCharacterHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
 
