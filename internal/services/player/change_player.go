@@ -9,7 +9,6 @@ func ChangePlayer(
 	id int64,
 	name string,
 	email string,
-	phone string,
 	password string,
 	soundSettings int,
 	db *gorm.DB,
@@ -26,10 +25,6 @@ func ChangePlayer(
 
 	if email != "" {
 		user.Email = email
-	}
-
-	if phone != "" {
-		user.Phone = phone
 	}
 
 	if password != "" {

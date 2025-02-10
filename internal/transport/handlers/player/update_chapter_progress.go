@@ -12,7 +12,6 @@ type PlayerChapterProgressRequest struct {
 	Id        int64 `json:"id"`
 	ChapterId int64 `json:"chapter_id"`
 	NodeId    int64 `json:"node_id"`
-	EndFlag   bool  `json:"end_flag"`
 }
 
 func PlayerChapterProgressHandler(db *gorm.DB) http.HandlerFunc {
@@ -38,7 +37,7 @@ func PlayerChapterProgressHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		err = player.UpdateChapterProgress(req.Id, req.ChapterId, req.NodeId, req.EndFlag, db)
+		err = player.UpdateChapterProgress(req.Id, req.ChapterId, req.NodeId, db)
 
 		if err != nil {
 			http.Error(w, "Fail to update chapter progress", http.StatusInternalServerError)

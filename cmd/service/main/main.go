@@ -2,7 +2,7 @@ package main
 
 import (
 	"db_novel_service/cmd/service/model"
-	admin_ "db_novel_service/internal/transport/handlers/admin "
+	"db_novel_service/internal/transport/handlers/admin"
 	"db_novel_service/internal/transport/handlers/chapter"
 	"db_novel_service/internal/transport/handlers/character"
 	"db_novel_service/internal/transport/handlers/node"
@@ -54,25 +54,25 @@ func main() {
 		handler := node.DeleteNodeHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
-	service.Router.HandleFunc("/get-nodes", func(w http.ResponseWriter, r *http.Request) {
+	service.Router.HandleFunc("/get-node", func(w http.ResponseWriter, r *http.Request) {
+		handler := node.GetNodeByChapterIdHandler(service.DB)
+		handler.ServeHTTP(w, r)
+	})
+	service.Router.HandleFunc("/get-nodes-by-chapter", func(w http.ResponseWriter, r *http.Request) {
 		handler := node.GetNodeByChapterIdHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
 
 	service.Router.HandleFunc("/admin-authorization", func(w http.ResponseWriter, r *http.Request) {
-		handler := admin_.AdminAuthorisationHandler(service.DB)
+		handler := admin.AdminAuthorisationHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/admin-registration", func(w http.ResponseWriter, r *http.Request) {
-		handler := admin_.AdminRegistrationHandler(service.DB)
+		handler := admin.AdminRegistrationHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
-	service.Router.HandleFunc("/admin-achange", func(w http.ResponseWriter, r *http.Request) {
-		handler := admin_.ChangeAdminHandler(service.DB)
-		handler.ServeHTTP(w, r)
-	})
-	service.Router.HandleFunc("/admin-update-chapter-progress", func(w http.ResponseWriter, r *http.Request) {
-		handler := admin_.AdminChapterProgressHandler(service.DB)
+	service.Router.HandleFunc("/admin-change", func(w http.ResponseWriter, r *http.Request) {
+		handler := admin.ChangeAdminHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
 
@@ -90,6 +90,10 @@ func main() {
 	})
 	service.Router.HandleFunc("/player-update", func(w http.ResponseWriter, r *http.Request) {
 		handler := player_.ChangePlayerRequestHandler(service.DB)
+		handler.ServeHTTP(w, r)
+	})
+	service.Router.HandleFunc("/get-player", func(w http.ResponseWriter, r *http.Request) {
+		handler := player_.GetPlayerByIdHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
 

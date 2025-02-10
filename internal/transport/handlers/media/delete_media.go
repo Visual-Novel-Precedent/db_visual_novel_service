@@ -1,22 +1,18 @@
-package character
+package media
 
 import (
-	"db_novel_service/internal/services/character"
+	"db_novel_service/internal/services/media"
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
 )
 
-type UpdateCharacterRequest struct {
-	Id       int64            `json:"id"`
-	Name     string           `json:"name,omitempty"`
-	Slug     string           `json:"slug,omitempty"`
-	Color    string           `json:"color,omitempty"`
-	Emotions map[int64]string `json:"emotions,omitempty"`
+type DeleteMediaRequest struct {
+	Id int64 `json:"id"`
 }
 
-func UpdateCharacterHandler(db *gorm.DB) http.HandlerFunc {
+func DeleteMediaHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
@@ -25,7 +21,7 @@ func UpdateCharacterHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req UpdateCharacterRequest
+		var req DeleteMediaRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -39,10 +35,18 @@ func UpdateCharacterHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		err = character.UpdateCharacter(req.Id, req.Name, req.Slug, req.Color, req.Emotions, db)
+		id, err := media.DeleteMedia(req.Id, db)
 
 		if err != nil {
-			http.Error(w, "fail to create character", http.StatusInternalServerError)
+			http.Error(w, "fail to delete media", http.StatusInternalServerError)
 		}
+
+		// Формируем ответ
+		response := map[string]interface{}{
+			"id": id,
+		}
+
+		// Отправляем ответ клиенту
+		json.NewEncoder(w).Encode(response)
 	}
 }

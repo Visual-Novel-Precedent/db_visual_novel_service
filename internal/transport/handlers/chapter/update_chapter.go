@@ -9,11 +9,13 @@ import (
 )
 
 type UpdateChapterRequest struct {
-	Id         int64   `json:"id"`
-	Name       string  `json:"name"`
-	Nodes      []int64 `json:"nodes"`
-	Characters []int64 `json:"characters"`
-	Author     int64   `json:"author"`
+	Id             int64   `json:"id"`
+	Name           string  `json:"name,omitempty"`
+	StartNode      int64   `json:"start_node,omitempty"`
+	Nodes          []int64 `json:"nodes,omitempty"`
+	Characters     []int64 `json:"characters,omitempty"`
+	Status         int     `json:"status,omitempty"` // 0 - черновик, 1 - на проверке, 2 - опубликована
+	UpdateAuthorId int64   `json:"update_author_id,omitempty"`
 }
 
 func UpdateChapterHandler(db *gorm.DB) http.HandlerFunc {
@@ -39,7 +41,7 @@ func UpdateChapterHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		err = chapter.UpdateChapter(req.Id, req.Name, req.Nodes, req.Characters, req.Author, db)
+		err = chapter.UpdateChapter(req.Id, req.Name, req.Nodes, req.Characters, req.UpdateAuthorId, req.StartNode, req.Status, db)
 
 		if err != nil {
 			http.Error(w, "fail to create chapter", http.StatusInternalServerError)

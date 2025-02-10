@@ -1,19 +1,18 @@
-package admin_
+package node
 
 import (
-	"db_novel_service/internal/services/admin"
+	"db_novel_service/internal/services/node"
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
 )
 
-type UserAuthorisationRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type GetNodeByChapterIdRequest struct {
+	ChapterId int64 `json:"chapter_id"`
 }
 
-func AdminAuthorisationHandler(db *gorm.DB) http.HandlerFunc {
+func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
@@ -22,7 +21,7 @@ func AdminAuthorisationHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req UserAuthorisationRequest
+		var req GetNodeByIdRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -36,19 +35,16 @@ func AdminAuthorisationHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Здесь должна быть логика получения данных пользователя
-		// Например, из базы данных:
-		user, err := admin.Authorization(req.Email, req.Password, db)
+		node, startNode, err := node.GetNodesByChapterId(req.Node, db)
+
+		if err != nil {
+			http.Error(w, "fail to get nodes", http.StatusInternalServerError)
+		}
 
 		// Формируем ответ
 		response := map[string]interface{}{
-			"id":               user.Id,
-			"name":             user.Name,
-			"adminStatus":      user.AdminStatus,
-			"createdChapters":  user.CreatedChapters,
-			"chaptersProgress": user.ChaptersProgress,
-			"requestSent":      user.RequestSent,
-			"requestsReceived": user.RequestsReceived,
+			"nodes":      node,
+			"start_node": startNode,
 		}
 
 		// Отправляем ответ клиенту

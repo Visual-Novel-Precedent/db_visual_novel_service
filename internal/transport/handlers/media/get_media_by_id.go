@@ -1,21 +1,18 @@
-package admin_
+package media
 
 import (
-	"db_novel_service/internal/services/admin"
+	"db_novel_service/internal/services/media"
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
 )
 
-type AdminChapterProgressRequest struct {
-	Id        int64 `json:"id"`
-	ChapterId int64 `json:"chapter_id"`
-	NodeId    int64 `json:"node_id"`
-	EndFlag   bool  `json:"end_flag"`
+type GetMediaByIdRequest struct {
+	Id int64 `json:"id"`
 }
 
-func AdminChapterProgressHandler(db *gorm.DB) http.HandlerFunc {
+func GetMediaByIdHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
@@ -24,7 +21,7 @@ func AdminChapterProgressHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req AdminChapterProgressRequest
+		var req DeleteMediaRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -38,11 +35,18 @@ func AdminChapterProgressHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		err = admin.UpdateChapterProgress(req.Id, req.ChapterId, req.NodeId, req.EndFlag, db)
+		media, err := media.GetMediaById(req.Id, db)
 
 		if err != nil {
-			http.Error(w, "Fail to update chapter progress", http.StatusInternalServerError)
-			return
+			http.Error(w, "fail to get media", http.StatusInternalServerError)
 		}
+
+		// Формируем ответ
+		response := map[string]interface{}{
+			"media": media,
+		}
+
+		// Отправляем ответ клиенту
+		json.NewEncoder(w).Encode(response)
 	}
 }

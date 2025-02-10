@@ -1,9 +1,9 @@
 package models
 
 type Character struct {
-	ТС       int64
+	Id       int64 `gorm:"primary_key"`
 	Name     string
 	Slug     string
 	Color    string
-	Emotions map[int64]string // индекс эмоции - url картинки
+	Emotions map[int64]int64 `gorm:"type:json;column:emotions"` // индекс эмоции - id картинки
 }

@@ -11,7 +11,7 @@ const (
 	EndNodeId = -1
 )
 
-func UpdateChapterProgress(id int64, chapterId int64, nodeId int64, endFlag bool, db *gorm.DB) error {
+func UpdateChapterProgress(id int64, chapterId int64, nodeId int64, db *gorm.DB) error {
 	user, err := storage.SelectPlayerWIthId(db, id)
 
 	if err != nil {
@@ -22,16 +22,20 @@ func UpdateChapterProgress(id int64, chapterId int64, nodeId int64, endFlag bool
 		return errors.New("error to get player progress")
 	}
 
-	if endFlag {
-		user.ChaptersProgress[chapterId] = EndNodeId
+	node, err := storage.SelectNodeWIthId(db, nodeId)
 
-		_, err = storage.UpdatePlayer(db, id, user)
+	if err != nil {
+		if node.End.Flag {
+			user.ChaptersProgress[chapterId] = EndNodeId
 
-		if err != nil {
-			return err
+			_, err = storage.UpdatePlayer(db, id, user)
+
+			if err != nil {
+				return err
+			}
+
+			return nil
 		}
-
-		return nil
 	}
 
 	chapter, err := storage.SelectChapterWIthId(db, chapterId)

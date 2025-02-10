@@ -12,6 +12,8 @@ func UpdateChapter(
 	nodes []int64,
 	characters []int64,
 	updateAuthorId int64,
+	startNode int64,
+	status int,
 	db *gorm.DB,
 ) error {
 	chapter, err := storage.SelectChapterWIthId(db, id)
@@ -34,6 +36,14 @@ func UpdateChapter(
 
 	if characters != nil {
 		newChapter.Characters = characters
+	}
+
+	if startNode != 0 {
+		newChapter.StartNode = startNode
+	}
+
+	if status != 0 {
+		newChapter.Status = status
 	}
 
 	_, err = storage.UpdateChapter(db, id, newChapter)

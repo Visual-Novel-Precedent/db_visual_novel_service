@@ -1,6 +1,7 @@
 package node
 
 import (
+	"db_novel_service/internal/models"
 	"db_novel_service/internal/storage"
 	"gorm.io/gorm"
 )
@@ -8,11 +9,11 @@ import (
 func UpdateNodeValue(
 	id int64,
 	slug string,
-	events []int64,
-	music string,
-	background string,
+	events map[int]models.Event,
+	music int64,
+	background int64,
 	branchingFlag bool,
-	condition map[int]int64,
+	condition map[string]int64,
 	endFlag bool,
 	endResult string,
 	endText string,
@@ -34,11 +35,11 @@ func UpdateNodeValue(
 		newNode.Events = events
 	}
 
-	if music != "" {
+	if music != 0 {
 		newNode.Music = music
 	}
 
-	if background != "" {
+	if background != 0 {
 		newNode.Background = background
 	}
 

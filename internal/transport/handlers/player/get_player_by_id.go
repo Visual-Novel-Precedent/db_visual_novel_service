@@ -1,25 +1,18 @@
-package admin_
+package player_
 
 import (
-	"db_novel_service/internal/services/admin"
+	"db_novel_service/internal/services/player"
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
 )
 
-type ChangeAdminStatusRequest struct {
-	Id               int64           `json:"id"`
-	Name             string          `json:"name"`
-	Email            string          `json:"email"`
-	Phone            string          `json:"phone"`
-	Password         string          `json:"password"`
-	AdminStatus      int             `json:"status"`
-	CreatedChapters  []int64         `json:"create_chapters"`
-	ChaptersProgress map[int64]int64 `json:"chapters_progress"`
+type GetPlayerByIdRequest struct {
+	Id int64 `json:"id"`
 }
 
-func ChangeAdminHandler(db *gorm.DB) http.HandlerFunc {
+func GetPlayerByIdHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
@@ -28,7 +21,7 @@ func ChangeAdminHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req ChangeAdminStatusRequest
+		var req GetPlayerByIdRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -44,15 +37,19 @@ func ChangeAdminHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Здесь должна быть логика получения данных пользователя
 		// Например, из базы данных:
-		err = admin.ChangeAdmin(req.Id, req.Name, req.Email, req.Phone, req.Password, req.AdminStatus, req.CreatedChapters, req.ChaptersProgress, db)
+		player, err := player.GetPlayerById(req.Id, db)
 
 		if err != nil {
-			http.Error(w, "faik to change status", http.StatusInternalServerError)
+			if err.Error() == "invalid password" {
+				http.Error(w, "invalid password", http.StatusForbidden)
+			}
+
+			http.Error(w, "error to get user", http.StatusInternalServerError)
 		}
 
 		// Формируем ответ
 		response := map[string]interface{}{
-			"id": req.Id,
+			"player": player,
 		}
 
 		// Отправляем ответ клиенту

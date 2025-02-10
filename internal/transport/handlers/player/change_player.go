@@ -8,13 +8,12 @@ import (
 	"net/http"
 )
 
-type ChangePlayerStatusRequest struct {
+type ChangePlayerRequest struct {
 	Id            int64  `json:"id"`
-	Name          string `json:"name"`
-	Email         string `json:"email"`
-	Phone         string `json:"phone"`
-	Password      string `json:"password"`
-	SoundSettings int    `json:"sound_settings"`
+	Name          string `json:"name,omitempty"`
+	Email         string `json:"email,omitempty"`
+	Password      string `json:"password,omitempty"`
+	SoundSettings int    `json:"sound_settings,omitempty"`
 }
 
 func ChangePlayerRequestHandler(db *gorm.DB) http.HandlerFunc {
@@ -26,7 +25,7 @@ func ChangePlayerRequestHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req ChangePlayerStatusRequest
+		var req ChangePlayerRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -42,7 +41,7 @@ func ChangePlayerRequestHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Здесь должна быть логика получения данных пользователя
 		// Например, из базы данных:
-		err = player.ChangePlayer(req.Id, req.Name, req.Email, req.Phone, req.Password, req.SoundSettings, db)
+		err = player.ChangePlayer(req.Id, req.Name, req.Email, req.Password, req.SoundSettings, db)
 
 		if err != nil {
 			http.Error(w, "faik to change status", http.StatusInternalServerError)

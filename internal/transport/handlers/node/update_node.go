@@ -1,6 +1,7 @@
 package node
 
 import (
+	"db_novel_service/internal/models"
 	nodeM "db_novel_service/internal/services/node"
 	"encoding/json"
 	"gorm.io/gorm"
@@ -9,24 +10,24 @@ import (
 )
 
 type UpdateNodeRequest struct {
-	Id         int64     `json:"id"`
-	Slug       string    `json:"slug"`
-	Events     []int64   `json:"events"`
-	Music      string    `json:"music"`
-	Background string    `json:"background"`
-	Branching  Branching `json:"branching"`
-	End        EndInfo   `json:"end"`
+	Id         int64                `json:"id"`
+	Slug       string               `json:"slug,omitempty"`
+	Events     map[int]models.Event `json:"events,omitempty"`
+	Music      int64                `json:"music,omitempty"`
+	Background int64                `json:"background,omitempty"`
+	Branching  Branching            `json:"branching,omitempty"`
+	End        EndInfo              `json:"end,omitempty"`
 }
 
 type Branching struct {
-	Flag      bool          `json:"branching_flag"`
-	Condition map[int]int64 `json:"condition"`
+	Flag      bool             `json:"branching_flag,omitempty"`
+	Condition map[string]int64 `json:"condition, omitempty"`
 }
 
 type EndInfo struct {
-	Flag      bool   `json:"end_flag"`
-	EndResult string `json:"end_result"`
-	EndText   string `json:"end_text"`
+	Flag      bool   `json:"end_flag,omitempty"`
+	EndResult string `json:"end_result,omitempty"`
+	EndText   string `json:"end_text,omitempty"`
 }
 
 func UpdateNodeHandler(db *gorm.DB) http.HandlerFunc {

@@ -8,11 +8,11 @@ import (
 	"net/http"
 )
 
-type GetNodeByChapterIdRequest struct {
-	ChapterId int64 `json:"chapter_id"`
+type GetNodeByIdRequest struct {
+	Node int64 `json:"chapter_id"`
 }
 
-func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {
+func GetNodeByIdHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
@@ -21,7 +21,7 @@ func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req GetNodeByChapterIdRequest
+		var req GetNodeByIdRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -35,7 +35,7 @@ func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		nodes, err := node.GetNodesById(req.ChapterId, db)
+		node, err := node.GetNodesById(req.Node, db)
 
 		if err != nil {
 			http.Error(w, "fail to get nodes", http.StatusInternalServerError)
@@ -43,7 +43,7 @@ func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Формируем ответ
 		response := map[string]interface{}{
-			"nodes": nodes,
+			"node": node,
 		}
 
 		// Отправляем ответ клиенту

@@ -9,16 +9,9 @@ import (
 func GetNodesById(
 	id int64,
 	db *gorm.DB,
-) ([]models.Node, error) {
-	var nodes []models.Node
+) (models.Node, error) {
 
-	node, err := storage.GetNodeById(db, id)
+	node, err := storage.SelectNodeWIthId(db, id)
 
-	if err != nil {
-		return nil, err
-	}
-
-	nodes = append(nodes, node)
-
-	return nodes, nil
+	return node, err
 }
