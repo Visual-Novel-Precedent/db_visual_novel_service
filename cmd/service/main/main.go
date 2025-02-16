@@ -1,17 +1,24 @@
 package main
 
 import (
+	"context"
+	"db_novel_service/cmd/service/migrator"
 	"db_novel_service/cmd/service/model"
 	"db_novel_service/internal/transport/handlers/admin"
 	"db_novel_service/internal/transport/handlers/chapter"
 	"db_novel_service/internal/transport/handlers/character"
+	"db_novel_service/internal/transport/handlers/media"
 	"db_novel_service/internal/transport/handlers/node"
 	player_ "db_novel_service/internal/transport/handlers/player"
 	"db_novel_service/internal/transport/handlers/request"
 	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 // init is invoked before main()
@@ -27,7 +34,11 @@ const (
 )
 
 func main() {
+	migrator.AutoMigrate()
+
 	service := run()
+
+	generateSQLMetadata(service.DB)
 
 	service.Router.HandleFunc("/create-chapter", func(w http.ResponseWriter, r *http.Request) {
 		handler := chapter.CreateChapterHandler(service.DB)
@@ -37,7 +48,7 @@ func main() {
 		handler := chapter.UpdateChapterHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
-	service.Router.HandleFunc("/get-chapter", func(w http.ResponseWriter, r *http.Request) {
+	service.Router.HandleFunc("/get-chapters", func(w http.ResponseWriter, r *http.Request) {
 		handler := chapter.GetChaptersByUserIdHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
@@ -60,6 +71,10 @@ func main() {
 	})
 	service.Router.HandleFunc("/get-nodes-by-chapter", func(w http.ResponseWriter, r *http.Request) {
 		handler := node.GetNodeByChapterIdHandler(service.DB)
+		handler.ServeHTTP(w, r)
+	})
+	service.Router.HandleFunc("/get-node-by-id", func(w http.ResponseWriter, r *http.Request) {
+		handler := node.GetNodeByIdHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
 
@@ -131,13 +146,54 @@ func main() {
 		handler.ServeHTTP(w, r)
 	})
 
-	port := os.Getenv(PORT)
-	if port == "" {
-		port = "8080" // Default port if not set
+	service.Router.HandleFunc("/create-media", func(w http.ResponseWriter, r *http.Request) {
+		handler := media.CreateMediaHandler(service.DB)
+		handler.ServeHTTP(w, r)
+	})
+	service.Router.HandleFunc("/get-media-by-id", func(w http.ResponseWriter, r *http.Request) {
+		handler := media.GetMediaByIdHandler(service.DB)
+		handler.ServeHTTP(w, r)
+	})
+	service.Router.HandleFunc("/get-media", func(w http.ResponseWriter, r *http.Request) {
+		handler := media.GetMediaHandler(service.DB)
+		handler.ServeHTTP(w, r)
+	})
+	service.Router.HandleFunc("/delete-media", func(w http.ResponseWriter, r *http.Request) {
+		handler := media.DeleteMediaHandler(service.DB)
+		handler.ServeHTTP(w, r)
+	})
+
+	// Создаем экземпляр сервера
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: service.Router,
 	}
 
-	// Запуск сервера
-	http.ListenAndServe(port, service.Router)
+	// Регистрируем обработчик сигналов
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	// Запускаем сервер в горутине
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("ошибка сервера: %v", err)
+		}
+		log.Println("Сервер завершил обработку новых подключений")
+	}()
+
+	// Ждем сигнала завершения
+	log.Println("Сервер запущен. Нажмите Ctrl+C для завершения...")
+	<-stop
+
+	// Graceful shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("ошибка при завершении работы: %v", err)
+	}
+
+	log.Println("Сервер успешно завершен")
 }
 
 func run() *model.Service {
@@ -146,4 +202,36 @@ func run() *model.Service {
 	service.Log.Info().Msg("service is created ")
 
 	return service
+}
+
+func generateSQLMetadata(db *gorm.DB) error {
+	// Получение схемы
+	migrator := db.Migrator()
+	if migrator == nil {
+		log.Fatal("Ошибка: migrator не найден")
+	}
+
+	// Получение информации о таблицах
+	tables, err := migrator.GetTables()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Вывод информации о таблицах
+	for _, table := range tables {
+		log.Printf("Таблица: %s", table)
+
+		// Получение информации о колонках
+		columns, err := migrator.ColumnTypes(table)
+		if err != nil {
+			log.Printf("Ошибка получения колонок для %s: %v", table, err)
+			continue
+		}
+
+		for _, column := range columns {
+			log.Printf("  - Колонка: %s (%s)", column.Name(), column.DatabaseTypeName())
+		}
+	}
+
+	return nil
 }

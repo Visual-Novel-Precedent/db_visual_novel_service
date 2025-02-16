@@ -8,14 +8,17 @@ import (
 	"time"
 )
 
-func CreateMedia(file []byte, fileType string, db *gorm.DB) (int64, error) {
-
+func CreateMedia(
+	file []byte,
+	contentType string,
+	db *gorm.DB,
+) (int64, error) {
 	id := generateUniqueId()
 
 	newMedia := models.Media{
-		Id:   id,
-		File: file,
-		Type: fileType,
+		Id:          id,
+		FileData:    file,
+		ContentType: contentType,
 	}
 
 	_, err := storage.RegisterMedia(db, newMedia)

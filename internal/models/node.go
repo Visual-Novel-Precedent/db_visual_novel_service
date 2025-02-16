@@ -3,17 +3,17 @@ package models
 type Node struct {
 	Id         int64 `gorm:"primary_key"`
 	Slug       string
-	Events     map[int]Event
+	Events     map[int]Event `gorm:"type:json"`
 	ChapterId  int64
 	Music      int64
 	Background int64
-	Branching  Branching
-	End        EndInfo
+	Branching  Branching `gorm:"type:json"`
+	End        EndInfo   `gorm:"type:json"`
 }
 
 type Branching struct {
 	Flag      bool
-	Condition map[string]int64 //Вариант и следующий узел
+	Condition map[string]int64 `gorm:"type:json"`
 }
 
 type EndInfo struct {

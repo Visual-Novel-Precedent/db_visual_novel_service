@@ -4,6 +4,7 @@ import (
 	"db_novel_service/internal/models"
 	"db_novel_service/internal/storage"
 	"gorm.io/gorm"
+	"log"
 )
 
 func UpdateNodeValue(
@@ -20,6 +21,8 @@ func UpdateNodeValue(
 	db *gorm.DB,
 ) error {
 	node, err := storage.SelectNodeWIthId(db, id)
+
+	log.Println(events)
 
 	if err != nil {
 		return err
@@ -59,7 +62,9 @@ func UpdateNodeValue(
 		newNode.End.EndText = endText
 	}
 
-	_, err = storage.UpdateNode(db, id, newNode)
+	log.Println(newNode.Events)
+
+	_, err = storage.UpdateNode(db, id, *newNode)
 
 	return err
 }

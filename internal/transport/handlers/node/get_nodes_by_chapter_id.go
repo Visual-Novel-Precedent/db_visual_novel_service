@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -21,7 +22,7 @@ func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req GetNodeByIdRequest
+		var req GetNodeByChapterIdRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -35,11 +36,13 @@ func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		node, startNode, err := node.GetNodesByChapterId(req.Node, db)
+		node, startNode, err := node.GetNodesByChapterId(req.ChapterId, db)
 
 		if err != nil {
 			http.Error(w, "fail to get nodes", http.StatusInternalServerError)
 		}
+
+		log.Println(err)
 
 		// Формируем ответ
 		response := map[string]interface{}{

@@ -1,20 +1,24 @@
-package admin_
+package admin
 
 import (
 	"db_novel_service/internal/services/admin"
 	"encoding/json"
+	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
 )
 
-type AdminRegistrationRequest struct {
-	Email    string `json:"email"`
-	Name     string `json:"name"`
-	Password string `json:"password"`
+type ChangeAdminRequest struct {
+	Id              int64   `json:"id"`
+	Name            string  `json:"name,omitempty"`
+	Email           string  `json:"email,omitempty"`
+	Password        string  `json:"password,omitempty"`
+	AdminStatus     int     `json:"status,omitempty"`
+	CreatedChapters []int64 `json:"created_chapters,omitempty"`
 }
 
-func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
+func ChangeAdminHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
@@ -23,7 +27,7 @@ func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req AdminRegistrationRequest
+		var req ChangeAdminRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -39,15 +43,17 @@ func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Здесь должна быть логика получения данных пользователя
 		// Например, из базы данных:
-		id, err := admin.Registration(req.Email, req.Name, req.Password, db)
+		err = admin.ChangeAdmin(req.Id, req.Name, req.Email, req.Password, req.AdminStatus, req.CreatedChapters, db)
 
 		if err != nil {
-			http.Error(w, "fail to register admin", http.StatusInternalServerError)
+			http.Error(w, "fail to change admin", http.StatusInternalServerError)
 		}
+		
+		log.Print(err)
 
 		// Формируем ответ
 		response := map[string]interface{}{
-			"id": id,
+			"id": req.Id,
 		}
 
 		// Отправляем ответ клиенту

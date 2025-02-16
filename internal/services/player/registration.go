@@ -5,34 +5,38 @@ import (
 	"db_novel_service/internal/storage"
 	"errors"
 	"gorm.io/gorm"
+	"log"
 	"math/rand"
 	"time"
 )
 
 const (
-	PlayerNotFoundError = "admin data not found"
+	PlayerNotFoundError  = "player data not found"
+	DefaultSoundSettings = 50
 )
 
 func Registration(email string, name string, password string, db *gorm.DB) (int64, error) {
-	_, err := storage.SelectPlayerWIthEmail(db, email)
+	player, err := storage.SelectPlayerWIthEmail(db, email)
 
-	if err == nil {
+	if player.Email == email {
 		return 0, errors.New("player with this email is already exist")
-	}
-
-	if err.Error() != PlayerNotFoundError {
-		return 0, err
 	}
 
 	id := generateUniqueId()
 
 	newPlayer := models.Player{
-		Id:       id,
-		Email:    email,
-		Password: password,
+		Id:                id,
+		Email:             email,
+		Name:              name,
+		Password:          password,
+		CompletedChapters: []int64{},
+		ChaptersProgress:  map[int64]int64{},
+		SoundSettings:     DefaultSoundSettings,
 	}
 
 	_, err = storage.RegisterPlayer(db, newPlayer)
+
+	log.Println(err)
 
 	if err != nil {
 		return 0, err

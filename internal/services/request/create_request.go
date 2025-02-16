@@ -4,6 +4,7 @@ import (
 	"db_novel_service/internal/models"
 	"db_novel_service/internal/storage"
 	"gorm.io/gorm"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -12,6 +13,8 @@ func CreateRequest(requestingAdminId int64, typeRequest int, requestedChapterId 
 
 	id := generateUniqueId()
 
+	log.Println(id)
+
 	newRequest := models.Request{
 		Id:                 id,
 		Type:               typeRequest,
@@ -19,7 +22,21 @@ func CreateRequest(requestingAdminId int64, typeRequest int, requestedChapterId 
 		RequestedChapterId: requestedChapterId,
 	}
 
-	id, err := storage.RegisterRequest(db, newRequest)
+	_, err := storage.RegisterRequest(db, newRequest)
+
+	if err != nil {
+		return 0, err
+	}
+
+	admin, err := storage.SelectAdminWithId(db, requestingAdminId)
+
+	if err != nil {
+		return 0, err
+	}
+
+	admin.RequestSent = append(admin.RequestSent, id)
+
+	_, err = storage.UpdateAdmin(db, admin.Id, admin)
 
 	if err != nil {
 		return 0, err
@@ -28,7 +45,7 @@ func CreateRequest(requestingAdminId int64, typeRequest int, requestedChapterId 
 	admins, err := storage.SelectAllSupeAdmins(db)
 
 	for _, admin := range admins {
-		ad, err := storage.SelectAdminWIthId(db, admin.Id)
+		ad, err := storage.SelectAdminWithId(db, admin.Id)
 
 		if err == nil {
 			ad.RequestsReceived = append(ad.RequestsReceived, id)

@@ -35,18 +35,10 @@ func DeleteMediaHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		id, err := media.DeleteMedia(req.Id, db)
+		_, err = media.DeleteMedia(req.Id, db)
 
 		if err != nil {
 			http.Error(w, "fail to delete media", http.StatusInternalServerError)
 		}
-
-		// Формируем ответ
-		response := map[string]interface{}{
-			"id": id,
-		}
-
-		// Отправляем ответ клиенту
-		json.NewEncoder(w).Encode(response)
 	}
 }

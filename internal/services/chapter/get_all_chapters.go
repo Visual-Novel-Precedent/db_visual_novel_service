@@ -8,7 +8,7 @@ import (
 
 func GetChaptersByUserId(db *gorm.DB, id int64) ([]models.Chapter, error) {
 
-	_, err := storage.SelectAdminWIthId(db, id)
+	_, err := storage.SelectAdminWithId(db, id)
 
 	if err == nil {
 		chapters, err := storage.GetChaptersForAdmin(db)

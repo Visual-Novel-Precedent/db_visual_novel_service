@@ -6,6 +6,7 @@ import (
 	"db_novel_service/internal/storage"
 	"errors"
 	"gorm.io/gorm"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -32,10 +33,14 @@ func Registration(email string, name string, password string, db *gorm.DB) (int6
 	id := generateUniqueId()
 
 	newAdmin := models.Admin{
-		Id:          id,
-		Email:       email,
-		Password:    password,
-		AdminStatus: DefaultAdminStatus,
+		Id:               id,
+		Email:            email,
+		Password:         password,
+		Name:             name,
+		AdminStatus:      DefaultAdminStatus,
+		CreatedChapters:  []int64{},
+		RequestSent:      []int64{},
+		RequestsReceived: []int64{},
 	}
 
 	_, err = storage.RegisterAdmin(db, newAdmin)
@@ -46,8 +51,10 @@ func Registration(email string, name string, password string, db *gorm.DB) (int6
 
 	_, err = request.CreateRequest(id, RegisterAdminTypeRequest, NoChapter, db)
 
+	log.Println(err)
+
 	if err != nil {
-		return 0, errors.New("fail to send registration requests to another admins")
+		return 0, errors.New("fail to send registration requests to another admin")
 	}
 
 	_, err = storage.RegisterPlayer(db, models.Player{

@@ -40,7 +40,7 @@ func PlayerRegistrationHandler(db *gorm.DB) http.HandlerFunc {
 		id, err := player2.Registration(req.Email, req.Name, req.Password, db)
 
 		if err != nil {
-			http.Error(w, "fail to register admin", http.StatusInternalServerError)
+			http.Error(w, "fail to register player", http.StatusInternalServerError)
 		}
 
 		// Формируем ответ

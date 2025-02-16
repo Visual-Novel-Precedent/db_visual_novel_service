@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -40,6 +41,8 @@ func GetChaptersByUserIdHandler(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, "fail to get chapters", http.StatusInternalServerError)
 		}
+
+		log.Println(err)
 
 		// Формируем ответ
 		response := map[string]interface{}{

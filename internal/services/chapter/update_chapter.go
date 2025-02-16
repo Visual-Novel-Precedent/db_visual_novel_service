@@ -24,6 +24,10 @@ func UpdateChapter(
 
 	newChapter := chapter
 
+	if newChapter.UpdatedAt == nil {
+		newChapter.UpdatedAt = make(map[time.Time]int64)
+	}
+
 	newChapter.UpdatedAt[time.Now()] = updateAuthorId
 
 	if name != "" {

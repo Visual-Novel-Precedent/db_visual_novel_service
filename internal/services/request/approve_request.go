@@ -4,6 +4,7 @@ import (
 	"db_novel_service/internal/storage"
 	"errors"
 	"gorm.io/gorm"
+	"log"
 )
 
 const (
@@ -15,7 +16,7 @@ const (
 	SuperAdminStatus    = 1
 	ApprovedAdminStatus = 0
 
-	PublishedChapterStatus = 2
+	PublishedChapterStatus = 3
 
 	ApprovedRequestStatus = 1
 )
@@ -28,13 +29,25 @@ func ApproveRequest(id int64, db *gorm.DB) error {
 	}
 
 	if request.Type == RequestSuperAdmin {
-		ad, err := storage.SelectAdminWIthId(db, request.RequestingAdmin)
+		ad, err := storage.SelectAdminWithId(db, request.RequestingAdmin)
 
 		if err != nil {
 			return errors.New("error to search admin")
 		}
 
 		ad.AdminStatus = SuperAdminStatus
+
+		allrequests, err := storage.GetAllRequests(db)
+
+		if err != nil {
+			return errors.New("error to get all requests")
+		}
+
+		ad.RequestsReceived = []int64{}
+
+		for _, req := range allrequests {
+			ad.RequestsReceived = append(ad.RequestsReceived, req.Id)
+		}
 
 		_, err = storage.UpdateAdmin(db, request.RequestingAdmin, ad)
 
@@ -44,13 +57,15 @@ func ApproveRequest(id int64, db *gorm.DB) error {
 	}
 
 	if request.Type == RequestRegistrationAdmin {
-		ad, err := storage.SelectAdminWIthId(db, request.RequestingAdmin)
+		ad, err := storage.SelectAdminWithId(db, request.RequestingAdmin)
 
 		if err != nil {
 			return errors.New("error to search admin")
 		}
 
 		ad.AdminStatus = ApprovedAdminStatus
+
+		log.Println(ad)
 
 		_, err = storage.UpdateAdmin(db, request.RequestingAdmin, ad)
 
@@ -92,6 +107,8 @@ func ApproveRequest(id int64, db *gorm.DB) error {
 	request.Status = ApprovedRequestStatus
 
 	_, err = storage.UpdateRequest(db, request.Id, request)
+
+	_, err = storage.DeleteRequest(db, id)
 
 	return err
 }

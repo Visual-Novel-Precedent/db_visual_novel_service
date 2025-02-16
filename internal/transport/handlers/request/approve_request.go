@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
 type ApproveRequestRequest struct {
-	IdRequest       int64 `json:"id_request"`
-	IdApprovedAdmin int64 `json:"id_approved_admin"`
-	IdReceivedAdmin int64 `json:"id_received_admin"`
+	IdRequest int64 `json:"id_request"`
 }
 
 func ApproveRequestHandler(db *gorm.DB) http.HandlerFunc {
@@ -23,7 +22,7 @@ func ApproveRequestHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req GetMyRequestsRequest
+		var req ApproveRequestRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -37,7 +36,9 @@ func ApproveRequestHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		err = request.ApproveRequest(req.Id, db)
+		err = request.ApproveRequest(req.IdRequest, db)
+
+		log.Println(err)
 
 		if err != nil {
 			http.Error(w, "Failed to approve request", http.StatusInternalServerError)

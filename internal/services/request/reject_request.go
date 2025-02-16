@@ -20,5 +20,7 @@ func RejectRequest(id int64, db *gorm.DB) error {
 
 	_, err = storage.UpdateRequest(db, request.Id, request)
 
+	_, err = storage.DeleteRequest(db, id)
+
 	return err
 }

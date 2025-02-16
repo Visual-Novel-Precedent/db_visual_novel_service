@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
+	"mime/multipart"
 	"net/http"
 )
 
 type CreateMediaRequest struct {
-	File []byte `json:"file"`
-	Type string `json:"type"`
+	File *multipart.FileHeader `json:"-"`
 }
 
 func CreateMediaHandler(db *gorm.DB) http.HandlerFunc {
@@ -21,25 +22,26 @@ func CreateMediaHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Читаем тело запроса
-		var req CreateMediaRequest
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		// Проверяем Content-Type
+		contentType := r.Header.Get("Content-Type")
+		if contentType != "image/png" && contentType != "application/mp3" {
+			http.Error(w, "Only PNG and MAP3 files are allowed", http.StatusBadRequest)
 			return
 		}
 
-		// Разбираем JSON
-		err = json.Unmarshal(body, &req)
+		// Читаем содержимое файла
+		fileData, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+			log.Printf("Error reading file: %v", err)
+			http.Error(w, "Failed to read file", http.StatusInternalServerError)
 			return
 		}
+		defer r.Body.Close()
 
-		id, err := media.CreateMedia(req.File, req.Type, db)
+		id, err := media.CreateMedia(fileData, contentType, db)
 
 		if err != nil {
-			http.Error(w, "fail to create media", http.StatusInternalServerError)
+			http.Error(w, "fail to create character", http.StatusInternalServerError)
 		}
 
 		// Формируем ответ

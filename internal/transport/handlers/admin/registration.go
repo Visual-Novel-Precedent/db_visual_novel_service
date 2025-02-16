@@ -1,18 +1,21 @@
-package player_
+package admin
 
 import (
-	"db_novel_service/internal/services/player"
+	"db_novel_service/internal/services/admin"
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
-type GetPlayerByIdRequest struct {
-	Id int64 `json:"id"`
+type AdminRegistrationRequest struct {
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
-func GetPlayerByIdHandler(db *gorm.DB) http.HandlerFunc {
+func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
@@ -21,7 +24,7 @@ func GetPlayerByIdHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req GetPlayerByIdRequest
+		var req AdminRegistrationRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -37,21 +40,17 @@ func GetPlayerByIdHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Здесь должна быть логика получения данных пользователя
 		// Например, из базы данных:
-		player, err := player.GetPlayerById(req.Id, db)
+		id, err := admin.Registration(req.Email, req.Name, req.Password, db)
+
+		log.Println(err)
 
 		if err != nil {
-			if err.Error() == "invalid password" {
-				http.Error(w, "invalid password", http.StatusForbidden)
-			}
-
-			http.Error(w, "error to get user", http.StatusInternalServerError)
+			http.Error(w, "fail to register admin", http.StatusInternalServerError)
 		}
-
-		player.Password = ""
 
 		// Формируем ответ
 		response := map[string]interface{}{
-			"player": player,
+			"id": id,
 		}
 
 		// Отправляем ответ клиенту

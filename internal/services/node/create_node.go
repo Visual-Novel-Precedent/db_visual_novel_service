@@ -16,9 +16,26 @@ func CreateNode(chapterId int64, slug string, db *gorm.DB) (int64, error) {
 		Id:        id,
 		Slug:      slug,
 		ChapterId: chapterId,
+		Events:    map[int]models.Event{},
+		Branching: models.Branching{},
+		End:       models.EndInfo{},
 	}
 
 	_, err := storage.RegisterNode(db, newNode)
+
+	if err != nil {
+		return 0, err
+	}
+
+	chapter, err := storage.SelectChapterWIthId(db, chapterId)
+
+	if err != nil {
+		return 0, err
+	}
+
+	chapter.Nodes = append(chapter.Nodes, id)
+
+	_, err = storage.UpdateChapter(db, chapterId, chapter)
 
 	if err != nil {
 		return 0, err

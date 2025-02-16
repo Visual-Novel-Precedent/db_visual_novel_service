@@ -3,6 +3,7 @@ package admin
 import (
 	"db_novel_service/internal/storage"
 	"gorm.io/gorm"
+	"log"
 )
 
 const (
@@ -18,7 +19,9 @@ func ChangeAdmin(
 	createdChapters []int64,
 	db *gorm.DB,
 ) error {
-	user, err := storage.SelectAdminWIthId(db, id)
+	user, err := storage.SelectAdminWithId(db, id)
+
+	log.Println(user)
 
 	if err != nil {
 		return err

@@ -9,9 +9,7 @@ import (
 )
 
 type RejectRequestRequest struct {
-	IdRequest       int64 `json:"id_request"`
-	IdApprovedAdmin int64 `json:"id_approved_admin"`
-	IdReceivedAdmin int64 `json:"id_received_admin"`
+	IdRequest int64 `json:"id_request"`
 }
 
 func RejectRequestHandler(db *gorm.DB) http.HandlerFunc {
@@ -23,7 +21,7 @@ func RejectRequestHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req GetMyRequestsRequest
+		var req RejectRequestRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -37,7 +35,7 @@ func RejectRequestHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		err = request.RejectRequest(req.Id, db)
+		err = request.RejectRequest(req.IdRequest, db)
 
 		if err != nil {
 			http.Error(w, "Failed to reject request", http.StatusInternalServerError)

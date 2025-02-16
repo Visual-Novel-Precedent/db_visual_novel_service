@@ -7,7 +7,7 @@ import (
 )
 
 func GetMyRequests(id int64, db *gorm.DB) ([]models.Request, error) {
-	admin, err := storage.SelectAdminWIthId(db, id)
+	admin, err := storage.SelectAdminWithId(db, id)
 
 	if err != nil {
 		return nil, err

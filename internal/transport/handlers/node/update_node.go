@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -52,6 +53,8 @@ func UpdateNodeHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "Invalid JSON format", http.StatusBadRequest)
 			return
 		}
+
+		log.Printf("events, %s", req.Events)
 
 		err = nodeM.UpdateNodeValue(req.Id, req.Slug, req.Events, req.Music, req.Background, req.Branching.Flag, req.Branching.Condition, req.End.Flag, req.End.EndResult, req.End.EndText, db)
 

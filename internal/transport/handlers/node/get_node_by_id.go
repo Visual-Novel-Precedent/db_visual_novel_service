@@ -1,22 +1,19 @@
-package character
+package node
 
 import (
-	"db_novel_service/internal/services/character"
+	"db_novel_service/internal/services/node"
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
-type UpdateCharacterRequest struct {
-	Id       int64           `json:"id"`
-	Name     string          `json:"name,omitempty"`
-	Slug     string          `json:"slug,omitempty"`
-	Color    string          `json:"color,omitempty"`
-	Emotions map[int64]int64 `json:"emotions,omitempty"`
+type GetNodeByIdRequest struct {
+	Node int64 `json:"id"`
 }
 
-func UpdateCharacterHandler(db *gorm.DB) http.HandlerFunc {
+func GetNodeByIdHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
@@ -25,7 +22,7 @@ func UpdateCharacterHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		// Читаем тело запроса
-		var req UpdateCharacterRequest
+		var req GetNodeByIdRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -39,10 +36,22 @@ func UpdateCharacterHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		err = character.UpdateCharacter(req.Id, req.Name, req.Slug, req.Color, req.Emotions, db)
+		log.Println(req.Node)
+
+		node, characters, media, err := node.GetNodesById(req.Node, db)
 
 		if err != nil {
-			http.Error(w, "fail to create character", http.StatusInternalServerError)
+			http.Error(w, "fail to get nodes", http.StatusInternalServerError)
 		}
+
+		// Формируем ответ
+		response := map[string]interface{}{
+			"node":       node,
+			"characters": characters,
+			"media":      media,
+		}
+
+		// Отправляем ответ клиенту
+		json.NewEncoder(w).Encode(response)
 	}
 }

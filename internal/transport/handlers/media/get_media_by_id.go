@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 type GetMediaByIdRequest struct {
@@ -41,12 +43,19 @@ func GetMediaByIdHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "fail to get media", http.StatusInternalServerError)
 		}
 
-		// Формируем ответ
-		response := map[string]interface{}{
-			"media": media,
-		}
+		// Устанавливаем заголовки ответа
+		w.Header().Set("Content-Type", media.ContentType)
+		w.Header().Set("Content-Length", strconv.Itoa(len(media.FileData)))
 
-		// Отправляем ответ клиенту
-		json.NewEncoder(w).Encode(response)
+		//// Формируем ответ
+		//response := map[string]interface{}{
+		//	"media": media,
+		//}
+
+		_, err = w.Write(media.FileData)
+		if err != nil {
+			log.Printf("Failed to write file: %v", err)
+			return
+		}
 	}
 }

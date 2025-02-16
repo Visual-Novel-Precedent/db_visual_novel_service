@@ -10,6 +10,12 @@ import (
 func GetCharacterHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		// Проверяем, что это GET-запрос
+		if r.Method != http.MethodGet {
+			http.Error(w, "Only GET requests allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		characters, err := character.GetCharacters(db)
 
 		if err != nil {

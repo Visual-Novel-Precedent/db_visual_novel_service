@@ -22,7 +22,9 @@ func GetNodesByChapterId(
 			return nil, 0, err
 		}
 
-		nodes = append(nodes, node)
+		if node != nil {
+			nodes = append(nodes, *node)
+		}
 	}
 
 	return nodes, chapter.StartNode, err

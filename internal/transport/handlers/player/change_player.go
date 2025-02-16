@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -43,8 +44,10 @@ func ChangePlayerRequestHandler(db *gorm.DB) http.HandlerFunc {
 		// Например, из базы данных:
 		err = player.ChangePlayer(req.Id, req.Name, req.Email, req.Password, req.SoundSettings, db)
 
+		log.Println(err)
+
 		if err != nil {
-			http.Error(w, "faik to change status", http.StatusInternalServerError)
+			http.Error(w, "fail to change status", http.StatusInternalServerError)
 		}
 	}
 }

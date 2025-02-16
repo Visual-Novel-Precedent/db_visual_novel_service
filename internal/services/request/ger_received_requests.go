@@ -4,10 +4,11 @@ import (
 	"db_novel_service/internal/models"
 	"db_novel_service/internal/storage"
 	"gorm.io/gorm"
+	"log"
 )
 
 func GetReceivedRequests(id int64, db *gorm.DB) ([]models.Request, error) {
-	admin, err := storage.SelectAdminWIthId(db, id)
+	admin, err := storage.SelectAdminWithId(db, id)
 
 	if err != nil {
 		return nil, err
@@ -24,6 +25,8 @@ func GetReceivedRequests(id int64, db *gorm.DB) ([]models.Request, error) {
 			requests = append(requests, request)
 		}
 	}
+
+	log.Println(requests)
 
 	return requests, nil
 }

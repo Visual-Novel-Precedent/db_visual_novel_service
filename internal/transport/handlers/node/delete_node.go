@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -36,6 +37,8 @@ func DeleteNodeHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		err = node.DeleteNode(req.NodeId, db)
+
+		log.Println(err)
 
 		if err != nil {
 			http.Error(w, "fail to delete node", http.StatusInternalServerError)

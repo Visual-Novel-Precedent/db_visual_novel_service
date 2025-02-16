@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -37,6 +38,8 @@ func CreateNodeHandler(db *gorm.DB) http.HandlerFunc {
 		}
 
 		id, err := node.CreateNode(req.ChapterId, req.Slug, db)
+
+		log.Println(err)
 
 		if err != nil {
 			http.Error(w, "fail to create node", http.StatusInternalServerError)

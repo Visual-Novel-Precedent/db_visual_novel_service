@@ -32,11 +32,22 @@ func UpdateRequest(db *gorm.DB, id int64, newRequest models.Request) (models.Req
 	return request, nil
 }
 
-func DeleteRequest(db *gorm.DB, email string) (int64, error) {
-	var deletedRequest models.Node
-	result := db.Where("email = ?", email).Delete(&deletedRequest)
+func DeleteRequest(db *gorm.DB, id int64) (int64, error) {
+	var deletedRequest models.Request
+	result := db.Where("id = ?", id).Delete(&deletedRequest)
 	if result.RowsAffected == 0 {
-		return 0, errors.New("request data not update")
+		return 0, errors.New("request data not delete")
 	}
 	return result.RowsAffected, nil
+}
+
+func GetAllRequests(db *gorm.DB) ([]models.Request, error) {
+	var requests []models.Request
+	result := db.Find(&requests)
+
+	if result.RowsAffected == 0 {
+		return []models.Request{}, errors.New("записи не найдены")
+	}
+
+	return requests, nil
 }

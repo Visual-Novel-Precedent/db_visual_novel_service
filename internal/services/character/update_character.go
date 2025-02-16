@@ -10,7 +10,7 @@ func UpdateCharacter(
 	name string,
 	slug string,
 	color string,
-	emotions map[int64]string,
+	emotions map[int64]int64,
 	db *gorm.DB,
 ) error {
 	character, err := storage.SelectCharacterWIthId(db, id)
