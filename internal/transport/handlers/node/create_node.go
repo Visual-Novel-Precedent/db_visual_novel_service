@@ -4,18 +4,32 @@ import (
 	"db_novel_service/internal/services/node"
 	"encoding/json"
 	"gorm.io/gorm"
+	"gorm.io/gorm/utils"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type CreateNodeRequest struct {
-	ChapterId int64  `json:"chapter_id"`
+	ChapterId string `json:"chapter_id"`
 	Slug      string `json:"string"`
 }
 
 func CreateNodeHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Добавляем CORS заголовки
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+
+		// Обрабатываем предварительный запрос (OPTIONS)
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
 			http.Error(w, "Only POST requests allowed", http.StatusMethodNotAllowed)
@@ -37,7 +51,17 @@ func CreateNodeHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		id, err := node.CreateNode(req.ChapterId, req.Slug, db)
+		idC, err := strconv.ParseInt(req.ChapterId, 10, 64)
+
+		if err != nil {
+			if err != nil {
+				log.Println("ошибка конвертации")
+				http.Error(w, "Failed to covert id", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		id, err := node.CreateNode(idC, req.Slug, db)
 
 		log.Println(err)
 
@@ -45,9 +69,11 @@ func CreateNodeHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "fail to create node", http.StatusInternalServerError)
 		}
 
+		log.Println("newNce", utils.ToString(id))
+
 		// Формируем ответ
 		response := map[string]interface{}{
-			"id": id,
+			"id": utils.ToString(id),
 		}
 
 		// Отправляем ответ клиенту

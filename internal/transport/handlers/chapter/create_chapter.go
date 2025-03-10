@@ -4,16 +4,29 @@ import (
 	"db_novel_service/internal/services/chapter"
 	"encoding/json"
 	"gorm.io/gorm"
+	"gorm.io/gorm/utils"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 type CreateChapterRequest struct {
-	Author int64 `json:"author"`
+	Author string `json:"author"`
 }
 
 func CreateChapterHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Добавляем CORS заголовки
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+
+		// Обрабатываем предварительный запрос (OPTIONS)
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
 			http.Error(w, "Only POST requests allowed", http.StatusMethodNotAllowed)
@@ -35,7 +48,17 @@ func CreateChapterHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		id, err := chapter.CreateDefaultChapter(req.Author, db)
+		id, err := strconv.ParseInt(req.Author, 10, 64)
+
+		if err != nil {
+			if err != nil {
+				log.Println("ошибка конвертации")
+				http.Error(w, "Failed to covert id", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		id, nodeId, err := chapter.CreateDefaultChapter(id, db)
 
 		if err != nil {
 			http.Error(w, "fail to create chapter", http.StatusInternalServerError)
@@ -43,7 +66,8 @@ func CreateChapterHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Формируем ответ
 		response := map[string]interface{}{
-			"id": id,
+			"id":         utils.ToString(id),
+			"start_node": utils.ToString(nodeId),
 		}
 
 		// Отправляем ответ клиенту

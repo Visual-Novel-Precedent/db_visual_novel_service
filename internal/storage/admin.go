@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	gorm "gorm.io/gorm"
+	"log"
 )
 
 func RegisterAdmin(db *gorm.DB, admin models.Admin) (int64, error) {
@@ -19,23 +20,45 @@ func RegisterAdmin(db *gorm.DB, admin models.Admin) (int64, error) {
 
 func SelectAdminWIthEmail(db *gorm.DB, email string) (models.Admin, error) {
 	var admin models.Admin
-
 	// Используем raw SQL с явной обработкой JSON
 	query := `
-        SELECT id, email, password,
-               COALESCE(created_chapters::TEXT, '[]') as chapters_raw
-        FROM admin
+        SELECT 
+            id,
+            name,
+            email,
+            password,
+            admin_status,
+            COALESCE(created_chapters::TEXT, '[]') as created_chapters_raw,
+            COALESCE(request_sent::TEXT, '[]') as request_sent_raw,
+            COALESCE(requests_received::TEXT, '[]') as requests_received_raw
+        FROM admins
         WHERE email = $1
         LIMIT 1
     `
-
 	row := db.Raw(query, email).Row()
 	if err := row.Err(); err != nil {
 		return models.Admin{}, err
 	}
 
-	var chaptersRaw sql.NullString
-	err := row.Scan(&admin.Id, &admin.Email, &admin.Password, &chaptersRaw)
+	// Декларируем переменные для JSON полей
+	var (
+		createdChaptersRaw  sql.NullString
+		requestSentRaw      sql.NullString
+		requestsReceivedRaw sql.NullString
+	)
+
+	// Сканируем все поля
+	err := row.Scan(
+		&admin.Id,
+		&admin.Name,
+		&admin.Email,
+		&admin.Password,
+		&admin.AdminStatus,
+		&createdChaptersRaw,
+		&requestSentRaw,
+		&requestsReceivedRaw,
+	)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return models.Admin{}, errors.New("admin data not found")
@@ -43,44 +66,48 @@ func SelectAdminWIthEmail(db *gorm.DB, email string) (models.Admin, error) {
 		return models.Admin{}, err
 	}
 
-	// Десериализуем JSON в структуру
-	var chaptersJSON []byte
-	if chaptersRaw.Valid {
-		chaptersJSON = []byte(chaptersRaw.String)
+	if createdChaptersRaw.Valid {
+		err = json.Unmarshal([]byte(createdChaptersRaw.String), &admin.CreatedChapters)
+		if err != nil {
+			return models.Admin{}, fmt.Errorf("failed to unmarshal created_chapters: %w", err)
+		}
 	} else {
-		chaptersJSON = []byte("[]")
+		admin.CreatedChapters = []int64{}
 	}
 
-	// Добавляем проверку на пустую строку
-	if len(chaptersJSON) == 0 {
-		chaptersJSON = []byte("[]")
+	if requestSentRaw.Valid {
+		err = json.Unmarshal([]byte(requestSentRaw.String), &admin.RequestSent)
+		if err != nil {
+			return models.Admin{}, fmt.Errorf("failed to unmarshal request_sent: %w", err)
+		}
+	} else {
+		admin.RequestSent = []int64{}
 	}
 
-	err = json.Unmarshal(chaptersJSON, &admin.CreatedChapters)
-	if err != nil {
-		return models.Admin{}, fmt.Errorf("failed to unmarshal created_chapters: %w", err)
+	if requestsReceivedRaw.Valid {
+		err = json.Unmarshal([]byte(requestsReceivedRaw.String), &admin.RequestsReceived)
+		if err != nil {
+			return models.Admin{}, fmt.Errorf("failed to unmarshal requests_received: %w", err)
+		}
+	} else {
+		admin.RequestsReceived = []int64{}
 	}
 
 	return admin, nil
 }
 
-//func SelectAdminWithId(db *gorm.DB, id int64) (models.Admin, error) {
-//	var admin models.Admin
-//	result := db.First(&admin, "id = ?", id)
-//	if result.RowsAffected == 0 {
-//		return models.Admin{}, errors.New("admin data not found")
-//	}
-//	return admin, nil
-//}
-
 func SelectAdminWithId(db *gorm.DB, id int64) (models.Admin, error) {
 	var admin models.Admin
 
-	// Используем raw SQL с явной обработкой JSON
+	log.Println(id)
+
+	// Используем raw SQL с явной обработкой всех JSON полей
 	query := `
-        SELECT id, email, password,
-               COALESCE(created_chapters::TEXT, '[]') as chapters_raw
-        FROM admin
+        SELECT id, name, email, password, admin_status,
+               COALESCE(created_chapters::TEXT, '[]') as created_chapters_raw,
+               COALESCE(request_sent::TEXT, '[]') as request_sent_raw,
+               COALESCE(requests_received::TEXT, '[]') as requests_received_raw
+        FROM admins
         WHERE id = $1
         LIMIT 1
     `
@@ -90,8 +117,26 @@ func SelectAdminWithId(db *gorm.DB, id int64) (models.Admin, error) {
 		return models.Admin{}, err
 	}
 
-	var chaptersRaw string
-	err := row.Scan(&admin.Id, &admin.Email, &admin.Password, &chaptersRaw)
+	var (
+		nameRaw             string
+		emailRaw            string
+		passwordRaw         string
+		adminStatusRaw      int
+		createdChaptersRaw  string
+		requestSentRaw      string
+		requestsReceivedRaw string
+	)
+
+	err := row.Scan(
+		&admin.Id,
+		&nameRaw,
+		&emailRaw,
+		&passwordRaw,
+		&adminStatusRaw,
+		&createdChaptersRaw,
+		&requestSentRaw,
+		&requestsReceivedRaw,
+	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return models.Admin{}, errors.New("admin data not found")
@@ -99,10 +144,26 @@ func SelectAdminWithId(db *gorm.DB, id int64) (models.Admin, error) {
 		return models.Admin{}, err
 	}
 
-	// Десериализуем JSON в структуру
-	err = json.Unmarshal([]byte(chaptersRaw), &admin.CreatedChapters)
+	// Преобразуем строки в структуру
+	admin.Name = nameRaw
+	admin.Email = emailRaw
+	admin.Password = passwordRaw
+	admin.AdminStatus = adminStatusRaw
+
+	// Десериализуем JSON поля
+	err = json.Unmarshal([]byte(createdChaptersRaw), &admin.CreatedChapters)
 	if err != nil {
 		return models.Admin{}, fmt.Errorf("failed to unmarshal created_chapters: %w", err)
+	}
+
+	err = json.Unmarshal([]byte(requestSentRaw), &admin.RequestSent)
+	if err != nil {
+		return models.Admin{}, fmt.Errorf("failed to unmarshal request_sent: %w", err)
+	}
+
+	err = json.Unmarshal([]byte(requestsReceivedRaw), &admin.RequestsReceived)
+	if err != nil {
+		return models.Admin{}, fmt.Errorf("failed to unmarshal requests_received: %w", err)
 	}
 
 	return admin, nil

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"db_novel_service/cmd/service/migrator"
 	"db_novel_service/cmd/service/model"
 	"db_novel_service/internal/transport/handlers/admin"
 	"db_novel_service/internal/transport/handlers/chapter"
@@ -34,11 +33,11 @@ const (
 )
 
 func main() {
-	migrator.AutoMigrate()
+	//migrator.AutoMigrate()
 
 	service := run()
 
-	generateSQLMetadata(service.DB)
+	//generateSQLMetadata(service.DB)
 
 	service.Router.HandleFunc("/create-chapter", func(w http.ResponseWriter, r *http.Request) {
 		handler := chapter.CreateChapterHandler(service.DB)
@@ -63,10 +62,6 @@ func main() {
 	})
 	service.Router.HandleFunc("/delete-node", func(w http.ResponseWriter, r *http.Request) {
 		handler := node.DeleteNodeHandler(service.DB)
-		handler.ServeHTTP(w, r)
-	})
-	service.Router.HandleFunc("/get-node", func(w http.ResponseWriter, r *http.Request) {
-		handler := node.GetNodeByChapterIdHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/get-nodes-by-chapter", func(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +123,7 @@ func main() {
 		handler := request.GetReceivedRequestHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})
-	service.Router.HandleFunc("/reject-requests", func(w http.ResponseWriter, r *http.Request) {
+	service.Router.HandleFunc("/reject-request", func(w http.ResponseWriter, r *http.Request) {
 		handler := request.RejectRequestHandler(service.DB)
 		handler.ServeHTTP(w, r)
 	})

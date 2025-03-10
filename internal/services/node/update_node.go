@@ -35,7 +35,9 @@ func UpdateNodeValue(
 	}
 
 	if events != nil {
+		log.Println(events, "eeevevevveveve")
 		newNode.Events = events
+		log.Println(newNode.Events, "hhhhhhhhh")
 	}
 
 	if music != 0 {
@@ -49,6 +51,7 @@ func UpdateNodeValue(
 	newNode.Branching.Flag = branchingFlag
 
 	if condition != nil {
+		newNode.Branching.Flag = true
 		newNode.Branching.Condition = condition
 	}
 

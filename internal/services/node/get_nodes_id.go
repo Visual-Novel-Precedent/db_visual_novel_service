@@ -14,6 +14,10 @@ func GetNodesById(
 
 	node, err := storage.SelectNodeWIthId(db, id)
 
+	if err != nil || node == nil {
+		return nil, nil, nil, err
+	}
+
 	log.Println(err)
 
 	characters := make(map[int64]string)

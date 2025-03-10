@@ -3,6 +3,7 @@ package character
 import (
 	"db_novel_service/internal/storage"
 	"gorm.io/gorm"
+	"log"
 )
 
 func UpdateCharacter(
@@ -14,6 +15,8 @@ func UpdateCharacter(
 	db *gorm.DB,
 ) error {
 	character, err := storage.SelectCharacterWIthId(db, id)
+
+	log.Println(character)
 
 	if err != nil {
 		return err
@@ -38,6 +41,8 @@ func UpdateCharacter(
 	}
 
 	_, err = storage.UpdateCharacter(db, id, newCharacter)
+
+	log.Println(err)
 
 	return err
 }

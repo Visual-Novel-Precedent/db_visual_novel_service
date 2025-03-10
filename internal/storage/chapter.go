@@ -12,11 +12,71 @@ import (
 )
 
 func RegisterChapter(db *gorm.DB, chapter models.Chapter) (int64, error) {
-	result := db.Create(&chapter)
-	if result.RowsAffected == 0 {
-		return 0, errors.New("chapter not created")
+	// Инициализация значений по умолчанию
+	if chapter.Nodes == nil {
+		chapter.Nodes = []int64{}
 	}
-	return result.RowsAffected, nil
+
+	if chapter.Characters == nil {
+		chapter.Characters = []int64{}
+	}
+
+	if chapter.UpdatedAt == nil {
+		chapter.UpdatedAt = make(map[time.Time]int64)
+	}
+
+	if chapter.Name == "" {
+		chapter.Name = "Новая глава"
+	}
+
+	// Маршируем JSON поля
+	nodesJSON, err := json.Marshal(chapter.Nodes)
+	if err != nil {
+		return 0, fmt.Errorf("ошибка маршалинга Nodes: %w", err)
+	}
+
+	charactersJSON, err := json.Marshal(chapter.Characters)
+	if err != nil {
+		return 0, fmt.Errorf("ошибка маршалинга Characters: %w", err)
+	}
+
+	// Создаем запись с проверенными значениями
+	result := db.Model(&chapter).
+		Create(map[string]interface{}{
+			"id":         chapter.Id,
+			"name":       chapter.Name,
+			"nodes":      json.RawMessage(nodesJSON),
+			"characters": json.RawMessage(charactersJSON),
+			"status":     chapter.Status,
+			"author":     chapter.Author,
+			"start_node": chapter.StartNode,
+		})
+
+	if result.RowsAffected == 0 {
+		return 0, fmt.Errorf("не удалось создать запись главы")
+	}
+
+	// Обновляем временную метку
+	timestamp := time.Now()
+	chapter.UpdatedAt[timestamp] = chapter.Id
+
+	// Маршируем UpdatedAt отдельно
+	updatedAtJSON, err := json.Marshal(chapter.UpdatedAt)
+	if err != nil {
+		return 0, fmt.Errorf("ошибка маршалинга UpdatedAt: %w", err)
+	}
+
+	updateResult := db.Model(&chapter).
+		Where("id = ?", chapter.Id).
+		Updates(map[string]interface{}{
+			"updated_at": json.RawMessage(updatedAtJSON),
+		})
+
+	if updateResult.Error != nil {
+		return 0, fmt.Errorf("ошибка обновления временной метки: %w", updateResult.Error)
+	}
+
+	return chapter.Id, nil
 }
 
 //func SelectChapterWIthId(db *gorm.DB, id int64) (models.Chapter, error) {
@@ -89,6 +149,8 @@ func SelectChapterWIthId(db *gorm.DB, id int64) (models.Chapter, error) {
 	}
 	chapter.UpdatedAt = updatedAtMap
 
+	log.Println("chapter из бд", chapter)
+
 	return chapter, nil
 }
 
@@ -132,10 +194,73 @@ func DeleteChapter(db *gorm.DB, id int64) (int64, error) {
 
 func GetChaptersForAdmin(db *gorm.DB) ([]models.Chapter, error) {
 	var chapters []models.Chapter
-	result := db.Find(&chapters)
+	query := `
+        SELECT 
+            id,
+            name,
+            start_node,
+            CAST(COALESCE(nodes, '[]'::json) AS TEXT) as nodes_raw,
+            CAST(COALESCE(characters, '[]'::json) AS TEXT) as characters_raw,
+            status,
+            CAST(updated_at AS TEXT) as updated_at_raw,
+            author
+        FROM chapters
+    `
 
-	if result.Error != nil {
-		return nil, result.Error
+	rows, err := db.Raw(query).Rows()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch published chapters: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var (
+			chapter       models.Chapter
+			nodesRaw      sql.NullString
+			charactersRaw sql.NullString
+			updatedAtRaw  string
+		)
+
+		err = rows.Scan(
+			&chapter.Id,
+			&chapter.Name,
+			&chapter.StartNode,
+			&nodesRaw,
+			&charactersRaw,
+			&chapter.Status,
+			&updatedAtRaw,
+			&chapter.Author,
+		)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan chapter: %w", err)
+		}
+
+		// Десериализация JSON полей с обработкой NULL значений
+		if nodesRaw.Valid {
+			if err := json.Unmarshal([]byte(nodesRaw.String), &chapter.Nodes); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal nodes: %w", err)
+			}
+		} else {
+			chapter.Nodes = make([]int64, 0) // Инициализируйте пустым слайсом
+		}
+
+		if charactersRaw.Valid {
+			if err := json.Unmarshal([]byte(charactersRaw.String), &chapter.Characters); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal characters: %w", err)
+			}
+		} else {
+			chapter.Characters = make([]int64, 0) // Инициализируйте пустым слайсом
+		}
+
+		// Обработка UpdatedAt остается без изменений
+		var updatedAtMap map[time.Time]int64
+		if err := json.Unmarshal([]byte(updatedAtRaw), &updatedAtMap); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal updated_at: %w", err)
+		}
+		chapter.UpdatedAt = updatedAtMap
+
+		chapters = append(chapters, chapter)
 	}
 
 	return chapters, nil

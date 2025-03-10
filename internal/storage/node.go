@@ -10,11 +10,65 @@ import (
 )
 
 func RegisterNode(db *gorm.DB, node models.Node) (int64, error) {
-	result := db.Create(&node)
-	if result.RowsAffected == 0 {
-		return 0, errors.New("node not created")
+	// Инициализация значений по умолчанию...
+	if node.Events == nil {
+		node.Events = map[int]models.Event{}
 	}
-	return result.RowsAffected, nil
+
+	node.Branching = models.Branching{}
+
+	node.End = models.EndInfo{}
+
+	// Проверяем и устанавливаем значения по умолчанию для простых полей
+	if node.Slug == "" {
+		node.Slug = "default-slug"
+	}
+
+	if node.Music == 0 {
+		node.Music = 1
+	}
+
+	if node.Background == 0 {
+		node.Background = 1
+	}
+
+	// Маршируем JSON поля
+	eventsJSON, err := json.Marshal(node.Events)
+	if err != nil {
+		return 0, fmt.Errorf("ошибка маршалинга Events: %w", err)
+	}
+
+	log.Printf("Events JSON: %s", eventsJSON)
+
+	branchingJSON, err := json.Marshal(node.Branching)
+	if err != nil {
+		return 0, fmt.Errorf("ошибка маршалинга Branching: %w", err)
+	}
+
+	endInfoJSON, err := json.Marshal(node.End)
+	if err != nil {
+		return 0, fmt.Errorf("ошибка маршалинга End: %w", err)
+	}
+
+	// Создаем запись с проверенными значениями
+	result := db.Model(&node).
+		Create(map[string]interface{}{
+			"id":         node.Id,
+			"slug":       node.Slug,
+			"events":     json.RawMessage(eventsJSON),
+			"chapter_id": node.ChapterId,
+			"music":      node.Music,
+			"background": node.Background,
+			"branching":  json.RawMessage(branchingJSON),
+			"end_info":   json.RawMessage(endInfoJSON),
+			"comment":    node.Comment,
+		})
+
+	if result.RowsAffected == 0 {
+		return 0, fmt.Errorf("не удалось создать запись узла")
+	}
+
+	return node.Id, nil
 }
 
 //func RegisterNode(db *gorm.DB, node models.Node) (int64, error) {
@@ -73,7 +127,8 @@ func SelectNodeWIthId(db *gorm.DB, nodeId int64) (*models.Node, error) {
             background,
             CAST(events AS TEXT) as events_raw,
             CAST(branching AS TEXT) as branching_raw,
-            CAST("end" AS TEXT) as end_raw
+            CAST(end_info AS TEXT) as end_raw,
+            comment
         FROM nodes
     `
 
@@ -102,6 +157,7 @@ func SelectNodeWIthId(db *gorm.DB, nodeId int64) (*models.Node, error) {
 			&eventsRaw,
 			&branchingRaw,
 			&endRaw,
+			&n.Comment,
 		)
 		if err != nil {
 			return nil, err

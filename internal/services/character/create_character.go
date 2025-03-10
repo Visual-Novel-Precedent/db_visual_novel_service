@@ -13,9 +13,11 @@ func CreateCharacter(name string, slug string, db *gorm.DB) (int64, error) {
 	id := generateUniqueId()
 
 	newCharacter := models.Character{
-		Id:   id,
-		Name: name,
-		Slug: slug,
+		Id:       id,
+		Name:     name,
+		Slug:     slug,
+		Emotions: map[int64]int64{},
+		Color:    "#00693E",
 	}
 
 	_, err := storage.RegisterCharacter(db, newCharacter)
@@ -28,7 +30,12 @@ func CreateCharacter(name string, slug string, db *gorm.DB) (int64, error) {
 }
 
 func generateUniqueId() int64 {
-	now := time.Now().UnixNano()
-	random := rand.Int63n(1 << 32) // 32-битное случайное число
-	return now ^ random
+	// Получаем текущее время в миллисекундах (48 бит)
+	timestamp := time.Now().UnixMilli()
+
+	// Генерируем 16 случайных бит
+	random := rand.Int31n(1 << 16)
+
+	// Объединяем timestamp и random в 64-битное число
+	return (int64(timestamp) << 16) | int64(random)
 }

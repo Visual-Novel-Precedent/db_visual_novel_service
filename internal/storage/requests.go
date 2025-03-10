@@ -3,6 +3,7 @@ package storage
 import (
 	"db_novel_service/internal/models"
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -14,39 +15,43 @@ func RegisterRequest(db *gorm.DB, request models.Request) (int64, error) {
 	return result.RowsAffected, nil
 }
 
-func SelectRequestWIthId(db *gorm.DB, id int64) (models.Request, error) {
+func SelectRequestWithId(db *gorm.DB, id int64) (*models.Request, error) {
 	var request models.Request
-	result := db.First(&request, "id = ?", id)
-	if result.RowsAffected == 0 {
-		return models.Request{}, errors.New("player data not found")
+	err := db.First(&request, "id = ?", id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, fmt.Errorf("запрос с ID %d не найден", id)
 	}
-	return request, nil
+	return &request, err
 }
 
-func UpdateRequest(db *gorm.DB, id int64, newRequest models.Request) (models.Request, error) {
-	var request models.Request
-	result := db.Model(&request).Where("id = ?", id).Updates(newRequest)
-	if result.RowsAffected == 0 {
-		return models.Request{}, errors.New("node data not update")
-	}
-	return request, nil
+func UpdateRequest(db *gorm.DB, id int64, newRequest models.Request) (int64, error) {
+	result := db.Model(&newRequest).
+		Where("id = ?", id).
+		Omit("id"). // Исключаем ID из обновления
+		Updates(newRequest)
+
+	return result.RowsAffected, result.Error
 }
 
 func DeleteRequest(db *gorm.DB, id int64) (int64, error) {
-	var deletedRequest models.Request
-	result := db.Where("id = ?", id).Delete(&deletedRequest)
-	if result.RowsAffected == 0 {
-		return 0, errors.New("request data not delete")
-	}
-	return result.RowsAffected, nil
+	result := db.Where("id = ?", id).Delete(&models.Request{})
+	return result.RowsAffected, result.Error
 }
 
 func GetAllRequests(db *gorm.DB) ([]models.Request, error) {
 	var requests []models.Request
+
+	// Используем Find вместо First для получения всех записей
 	result := db.Find(&requests)
 
+	// Проверяем ошибки
+	if result.Error != nil {
+		return []models.Request{}, fmt.Errorf("ошибка при получении запросов: %w", result.Error)
+	}
+
+	// Проверяем наличие записей
 	if result.RowsAffected == 0 {
-		return []models.Request{}, errors.New("записи не найдены")
+		return []models.Request{}, fmt.Errorf("записи не найдены")
 	}
 
 	return requests, nil

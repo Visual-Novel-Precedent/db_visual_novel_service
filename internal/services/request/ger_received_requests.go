@@ -19,10 +19,10 @@ func GetReceivedRequests(id int64, db *gorm.DB) ([]models.Request, error) {
 	var requests []models.Request
 
 	for _, i := range requestID {
-		request, err := storage.SelectRequestWIthId(db, i)
+		request, err := storage.SelectRequestWithId(db, i)
 
 		if err == nil {
-			requests = append(requests, request)
+			requests = append(requests, *request)
 		}
 	}
 

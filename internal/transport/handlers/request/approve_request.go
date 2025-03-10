@@ -7,14 +7,26 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 type ApproveRequestRequest struct {
-	IdRequest int64 `json:"id_request"`
+	IdRequest string `json:"id_request"`
 }
 
 func ApproveRequestHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// Добавляем CORS заголовки
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+
+		// Обрабатываем предварительный запрос (OPTIONS)
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
 			http.Error(w, "Only POST requests allowed", http.StatusMethodNotAllowed)
@@ -36,7 +48,17 @@ func ApproveRequestHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		err = request.ApproveRequest(req.IdRequest, db)
+		id, err := strconv.ParseInt(req.IdRequest, 10, 64)
+
+		if err != nil {
+			if err != nil {
+				log.Println("ошибка конвертации id")
+				http.Error(w, "Failed to covert id", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		err = request.ApproveRequest(id, db)
 
 		log.Println(err)
 

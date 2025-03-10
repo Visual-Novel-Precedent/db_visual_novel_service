@@ -4,7 +4,9 @@ import (
 	"db_novel_service/internal/services/character"
 	"encoding/json"
 	"gorm.io/gorm"
+	"gorm.io/gorm/utils"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -15,6 +17,18 @@ type CreateCharacterRequest struct {
 
 func CreateCharacterHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Добавляем CORS заголовки
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+
+		// Обрабатываем предварительный запрос (OPTIONS)
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
 			http.Error(w, "Only POST requests allowed", http.StatusMethodNotAllowed)
@@ -44,8 +58,10 @@ func CreateCharacterHandler(db *gorm.DB) http.HandlerFunc {
 
 		// Формируем ответ
 		response := map[string]interface{}{
-			"id": id,
+			"id": utils.ToString(id),
 		}
+
+		log.Println("новый персонаж", id)
 
 		// Отправляем ответ клиенту
 		json.NewEncoder(w).Encode(response)

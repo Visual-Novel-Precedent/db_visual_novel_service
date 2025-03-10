@@ -13,6 +13,7 @@ import (
 
 const (
 	AdminNotFoundError = "admin data not found"
+
 	DefaultAdminStatus = -1
 
 	NoChapter                = -1
@@ -26,9 +27,10 @@ func Registration(email string, name string, password string, db *gorm.DB) (int6
 		return 0, errors.New("admin with this email is already exist")
 	}
 
-	if err.Error() != AdminNotFoundError {
-		return 0, err
-	}
+	//if err.Error() != AdminNotFoundError {
+	//	log.Println(err, "ошибка получения админа")
+	//	return 0, err
+	//}
 
 	id := generateUniqueId()
 
@@ -73,7 +75,12 @@ func Registration(email string, name string, password string, db *gorm.DB) (int6
 }
 
 func generateUniqueId() int64 {
-	now := time.Now().UnixNano()
-	random := rand.Int63n(1 << 32) // 32-битное случайное число
-	return now ^ random
+	// Получаем текущее время в миллисекундах (48 бит)
+	timestamp := time.Now().UnixMilli()
+
+	// Генерируем 16 случайных бит
+	random := rand.Int31n(1 << 16)
+
+	// Объединяем timestamp и random в 64-битное число
+	return (int64(timestamp) << 16) | int64(random)
 }

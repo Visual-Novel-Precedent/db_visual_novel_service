@@ -5,13 +5,10 @@ import (
 	"db_novel_service/internal/storage"
 	"fmt"
 	"gorm.io/gorm"
-	"log"
 )
 
 func Authorization(email string, password string, db *gorm.DB) (*models.Admin, error) {
 	user, err := storage.SelectAdminWIthEmail(db, email)
-
-	log.Println(user.CreatedChapters)
 
 	if err != nil {
 		return nil, err

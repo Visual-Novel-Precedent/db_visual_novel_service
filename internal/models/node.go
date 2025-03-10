@@ -9,6 +9,7 @@ type Node struct {
 	Background int64
 	Branching  Branching `gorm:"type:json"`
 	End        EndInfo   `gorm:"type:json"`
+	Comment    string
 }
 
 type Branching struct {

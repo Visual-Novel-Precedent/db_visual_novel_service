@@ -1,6 +1,7 @@
 package request
 
 import (
+	"db_novel_service/internal/models"
 	"db_novel_service/internal/storage"
 	"errors"
 	"gorm.io/gorm"
@@ -22,7 +23,19 @@ const (
 )
 
 func ApproveRequest(id int64, db *gorm.DB) error {
-	request, err := storage.SelectRequestWIthId(db, id)
+	allrequests, err := storage.GetAllRequests(db)
+
+	log.Println(allrequests)
+
+	var request models.Request
+
+	for _, r := range allrequests {
+		if r.Id == id {
+			request = r
+		}
+	}
+
+	log.Println("request:", request)
 
 	if err != nil {
 		return err
@@ -36,18 +49,6 @@ func ApproveRequest(id int64, db *gorm.DB) error {
 		}
 
 		ad.AdminStatus = SuperAdminStatus
-
-		allrequests, err := storage.GetAllRequests(db)
-
-		if err != nil {
-			return errors.New("error to get all requests")
-		}
-
-		ad.RequestsReceived = []int64{}
-
-		for _, req := range allrequests {
-			ad.RequestsReceived = append(ad.RequestsReceived, req.Id)
-		}
 
 		_, err = storage.UpdateAdmin(db, request.RequestingAdmin, ad)
 

@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 type GetMyReceivedRequest struct {
@@ -35,7 +37,17 @@ func GetReceivedRequestHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		requests, err := request.GetReceivedRequests(req.Id, db)
+		id, err := strconv.ParseInt(req.Id, 10, 64)
+
+		if err != nil {
+			if err != nil {
+				log.Println("ошибка конвертации")
+				http.Error(w, "Failed to covert id", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		requests, err := request.GetReceivedRequests(id, db)
 
 		// Формируем ответ
 		response := map[string]interface{}{

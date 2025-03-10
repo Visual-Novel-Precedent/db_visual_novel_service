@@ -17,13 +17,25 @@ type AdminRegistrationRequest struct {
 
 func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Проверяем, что это POST-запрос
-		if r.Method != http.MethodPost {
-			http.Error(w, "Only POST requests allowed", http.StatusMethodNotAllowed)
+		// Добавляем CORS заголовки
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+
+		// Обрабатываем предварительный запрос (OPTIONS)
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
 			return
 		}
 
-		// Читаем тело запроса
+		// Проверяем метод запроса
+		if r.Method != http.MethodPost {
+			http.Error(w, "Only POST requests allowed", http.StatusMethodNotAllowed)
+			log.Printf("Получен некорректный метод: %s", r.Method)
+			return
+		}
+
+		// Остальной код обработки POST-запроса остается без изменений
 		var req AdminRegistrationRequest
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -31,29 +43,21 @@ func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		// Разбираем JSON
 		err = json.Unmarshal(body, &req)
 		if err != nil {
 			http.Error(w, "Invalid JSON format", http.StatusBadRequest)
 			return
 		}
 
-		// Здесь должна быть логика получения данных пользователя
-		// Например, из базы данных:
 		id, err := admin.Registration(req.Email, req.Name, req.Password, db)
-
-		log.Println(err)
-
 		if err != nil {
 			http.Error(w, "fail to register admin", http.StatusInternalServerError)
+			return
 		}
 
-		// Формируем ответ
 		response := map[string]interface{}{
 			"id": id,
 		}
-
-		// Отправляем ответ клиенту
 		json.NewEncoder(w).Encode(response)
 	}
 }

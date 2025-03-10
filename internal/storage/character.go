@@ -109,10 +109,25 @@ func SelectCharacters(db *gorm.DB) ([]models.Character, error) {
 
 func UpdateCharacter(db *gorm.DB, id int64, newCharacter models.Character) (models.Character, error) {
 	var character models.Character
-	result := db.Model(&character).Where("id = ?", id).Updates(newCharacter)
+
+	emotionsJSON, err := json.Marshal(newCharacter.Emotions)
+	if err != nil {
+		return models.Character{}, err
+	}
+
+	result := db.Model(&character).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"Name":     newCharacter.Name,
+			"Slug":     newCharacter.Slug,
+			"Color":    newCharacter.Color,
+			"Emotions": json.RawMessage(emotionsJSON),
+		})
+
 	if result.RowsAffected == 0 {
 		return models.Character{}, errors.New("character data not update")
 	}
+
 	return character, nil
 }
 

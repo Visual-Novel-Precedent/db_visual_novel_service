@@ -4,10 +4,13 @@ import (
 	"db_novel_service/internal/services/media"
 	"encoding/json"
 	"gorm.io/gorm"
+	"gorm.io/gorm/utils"
+	"io"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"strings"
 )
 
 type CreateMediaRequest struct {
@@ -16,40 +19,107 @@ type CreateMediaRequest struct {
 
 func CreateMediaHandler(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Проверяем, что это POST-запрос
+		log.Printf("получен запрос на добавление медиа")
+
+		// Добавляем CORS заголовки
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept")
+
+		// Обработка предварительного запроса
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// Проверка метода запроса
 		if r.Method != http.MethodPost {
 			http.Error(w, "Only POST requests allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		// Проверяем Content-Type
+		// Получаем Content-Type
 		contentType := r.Header.Get("Content-Type")
-		if contentType != "image/png" && contentType != "application/mp3" {
-			http.Error(w, "Only PNG and MAP3 files are allowed", http.StatusBadRequest)
+		log.Printf("Content-Type: %s", contentType)
+
+		var file io.Reader
+		var err error
+
+		// Проверяем тип загрузки
+		if strings.HasPrefix(contentType, "multipart/form-data") {
+			// Обработка multipart формата
+			err = r.ParseMultipartForm(32 << 20)
+			if err != nil {
+				log.Printf("ошибка парсинга multipart: %v", err)
+				http.Error(w, "Failed to parse multipart form", http.StatusBadRequest)
+				return
+			}
+
+			// Получение файла из multipart формы
+			fileHeader, _, err := r.FormFile("file")
+			if err != nil {
+				log.Printf("ошибка получения файла: %v", err)
+				http.Error(w, "No file provided", http.StatusBadRequest)
+				return
+			}
+			defer fileHeader.Close()
+
+			file = fileHeader
+		} else {
+			// Прямая загрузка файла
+			file = r.Body
+		}
+
+		// Проверка типа файла
+		fileHeader := make([]byte, 512)
+		_, err = file.Read(fileHeader)
+		if err != nil {
+			log.Printf("ошибка чтения заголовка файла: %v", err)
+			http.Error(w, "Failed to read file header", http.StatusInternalServerError)
 			return
 		}
 
-		// Читаем содержимое файла
-		fileData, err := ioutil.ReadAll(r.Body)
+		// Возвращаем позицию файла на начало
+		if closer, ok := file.(io.Seeker); ok {
+			_, err = closer.Seek(0, io.SeekStart)
+			if err != nil {
+				log.Printf("ошибка возврата файла на начало: %v", err)
+				http.Error(w, "Failed to seek file", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		fileType := http.DetectContentType(fileHeader)
+
+		if fileType != "image/png" && fileType != "audio/mpeg" {
+			log.Printf("неподдерживаемый тип файла: %s", fileType)
+			http.Error(w, "Only PNG images and MP3 audio files are allowed", http.StatusBadRequest)
+			return
+		}
+
+		// Считываем весь файл
+		fileData, err := ioutil.ReadAll(file)
 		if err != nil {
-			log.Printf("Error reading file: %v", err)
+			log.Printf("ошибка чтения файла: %v", err)
 			http.Error(w, "Failed to read file", http.StatusInternalServerError)
 			return
 		}
-		defer r.Body.Close()
 
-		id, err := media.CreateMedia(fileData, contentType, db)
-
+		// Сохраняем файл
+		id, err := media.CreateMedia(fileData, "audio/mp3", db) // Изменено с fileType на "audio/mp3"
 		if err != nil {
-			http.Error(w, "fail to create character", http.StatusInternalServerError)
+			log.Printf("ошибка сохранения файла: %v", err)
+			http.Error(w, "Failed to save media", http.StatusInternalServerError)
+			return
 		}
 
 		// Формируем ответ
 		response := map[string]interface{}{
-			"id": id,
+			"id": utils.ToString(id),
 		}
 
-		// Отправляем ответ клиенту
+		log.Println("id media", id)
+
 		json.NewEncoder(w).Encode(response)
 	}
 }

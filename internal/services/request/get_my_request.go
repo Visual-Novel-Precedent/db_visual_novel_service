@@ -4,26 +4,23 @@ import (
 	"db_novel_service/internal/models"
 	"db_novel_service/internal/storage"
 	"gorm.io/gorm"
+	"log"
 )
 
 func GetMyRequests(id int64, db *gorm.DB) ([]models.Request, error) {
 	admin, err := storage.SelectAdminWithId(db, id)
 
+	log.Println("admin", admin.AdminStatus)
+
 	if err != nil {
 		return nil, err
 	}
 
-	requestID := admin.RequestSent
-
-	var requests []models.Request
-
-	for _, i := range requestID {
-		request, err := storage.SelectRequestWIthId(db, i)
-
-		if err == nil {
-			requests = append(requests, request)
-		}
+	if admin.AdminStatus != 1 {
+		return nil, nil
 	}
 
-	return requests, nil
+	requests, err := storage.GetAllRequests(db)
+
+	return requests, err
 }

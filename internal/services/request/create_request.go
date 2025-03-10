@@ -13,7 +13,7 @@ func CreateRequest(requestingAdminId int64, typeRequest int, requestedChapterId 
 
 	id := generateUniqueId()
 
-	log.Println(id)
+	log.Println(requestingAdminId, typeRequest, requestedChapterId)
 
 	newRequest := models.Request{
 		Id:                 id,
@@ -25,12 +25,14 @@ func CreateRequest(requestingAdminId int64, typeRequest int, requestedChapterId 
 	_, err := storage.RegisterRequest(db, newRequest)
 
 	if err != nil {
+		log.Println("ошибка регестрирования запроса")
 		return 0, err
 	}
 
 	admin, err := storage.SelectAdminWithId(db, requestingAdminId)
 
 	if err != nil {
+		log.Println("ошибка обноружения админа")
 		return 0, err
 	}
 
@@ -54,11 +56,37 @@ func CreateRequest(requestingAdminId int64, typeRequest int, requestedChapterId 
 		_, _ = storage.UpdateAdmin(db, admin.Id, ad)
 	}
 
+	log.Println(typeRequest, "typeRequest")
+
+	if typeRequest == 1 && requestedChapterId != 0 {
+
+		chapter, err := storage.SelectChapterWIthId(db, requestedChapterId)
+
+		if err != nil {
+			return 0, err
+		}
+
+		chapter.Status = 2
+
+		_, err = storage.UpdateChapter(db, chapter.Id, chapter)
+
+		if err != nil {
+			return 0, err
+		}
+
+		log.Println("yовый статус", chapter.Status)
+	}
+
 	return id, nil
 }
 
 func generateUniqueId() int64 {
-	now := time.Now().UnixNano()
-	random := rand.Int63n(1 << 32) // 32-битное случайное число
-	return now ^ random
+	// Получаем текущее время в миллисекундах (48 бит)
+	timestamp := time.Now().UnixMilli()
+
+	// Генерируем 16 случайных бит
+	random := rand.Int31n(1 << 16)
+
+	// Объединяем timestamp и random в 64-битное число
+	return (int64(timestamp) << 16) | int64(random)
 }
