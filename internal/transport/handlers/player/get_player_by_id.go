@@ -3,6 +3,7 @@ package player_
 import (
 	"db_novel_service/internal/services/player"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
@@ -12,7 +13,7 @@ type GetPlayerByIdRequest struct {
 	Id int64 `json:"id"`
 }
 
-func GetPlayerByIdHandler(db *gorm.DB) http.HandlerFunc {
+func GetPlayerByIdHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {

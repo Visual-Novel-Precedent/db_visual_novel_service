@@ -3,9 +3,9 @@ package chapter
 import (
 	"db_novel_service/internal/services/chapter"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -20,7 +20,7 @@ type UpdateChapterRequest struct {
 	UpdateAuthorId string   `json:"update_author_id,omitempty"`
 }
 
-func UpdateChapterHandler(db *gorm.DB) http.HandlerFunc {
+func UpdateChapterHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("получен запрос на изменение chapter")

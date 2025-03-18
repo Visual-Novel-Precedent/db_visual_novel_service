@@ -3,10 +3,10 @@ package chapter
 import (
 	"db_novel_service/internal/services/chapter"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -15,7 +15,7 @@ type CreateChapterRequest struct {
 	Author string `json:"author"`
 }
 
-func CreateChapterHandler(db *gorm.DB) http.HandlerFunc {
+func CreateChapterHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Добавляем CORS заголовки
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -73,4 +73,9 @@ func CreateChapterHandler(db *gorm.DB) http.HandlerFunc {
 		// Отправляем ответ клиенту
 		json.NewEncoder(w).Encode(response)
 	}
+}
+
+type CreateChapterResponse struct {
+	Id        string
+	startNode string
 }

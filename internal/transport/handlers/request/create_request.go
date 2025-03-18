@@ -3,9 +3,9 @@ package request
 import (
 	"db_novel_service/internal/services/request"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -16,7 +16,7 @@ type PlayerRegistrationRequest struct {
 	Type              int    `json:"type"`
 }
 
-func CreateRequestHandler(db *gorm.DB) http.HandlerFunc {
+func CreateRequestHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("получили запрос на публикацию")

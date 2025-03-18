@@ -4,9 +4,9 @@ import (
 	"db_novel_service/internal/models"
 	nodeM "db_novel_service/internal/services/node"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -40,7 +40,7 @@ type EndInfo struct {
 	EndText   string `json:"end_text,omitempty"`
 }
 
-func UpdateNodeHandler(db *gorm.DB) http.HandlerFunc {
+func UpdateNodeHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("Получен запрос на изменение nodes")

@@ -3,9 +3,9 @@ package node
 import (
 	"db_novel_service/internal/services/node"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -13,7 +13,7 @@ type DeleteNodeRequest struct {
 	NodeId int64 `json:"id"`
 }
 
-func DeleteNodeHandler(db *gorm.DB) http.HandlerFunc {
+func DeleteNodeHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {

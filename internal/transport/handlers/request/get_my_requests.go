@@ -4,10 +4,10 @@ import (
 	"db_novel_service/internal/models"
 	"db_novel_service/internal/services/request"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -16,7 +16,7 @@ type GetMyRequestsRequest struct {
 	Id string `json:"id"`
 }
 
-func GetMyRequestHandler(db *gorm.DB) http.HandlerFunc {
+func GetMyRequestHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("запрос на получение запросов получен")
 		// Добавляем CORS заголовки

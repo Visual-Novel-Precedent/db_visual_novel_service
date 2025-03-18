@@ -23,6 +23,8 @@ const (
 )
 
 func ApproveRequest(id int64, db *gorm.DB) error {
+	log.Println("аппрувим")
+	log.Println(id)
 	allrequests, err := storage.GetAllRequests(db)
 
 	log.Println(allrequests)
@@ -31,7 +33,9 @@ func ApproveRequest(id int64, db *gorm.DB) error {
 
 	for _, r := range allrequests {
 		if r.Id == id {
+			log.Println("напли", r.Id)
 			request = r
+			log.Println(r.RequestedChapterId)
 		}
 	}
 
@@ -96,6 +100,15 @@ func ApproveRequest(id int64, db *gorm.DB) error {
 
 		if err != nil {
 			return errors.New("error to search chapter")
+		}
+
+		for _, node := range chapter.Nodes {
+			_, err = storage.DeleteNode(db, node)
+
+			if err != nil {
+				log.Println("jшибка удаления узла")
+				return err
+			}
 		}
 
 		_, err = storage.DeleteChapter(db, chapter.Id)

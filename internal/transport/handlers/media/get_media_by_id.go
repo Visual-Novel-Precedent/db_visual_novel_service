@@ -1,12 +1,11 @@
 package media
 
 import (
-	"bytes"
 	"db_novel_service/internal/services/media"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -15,7 +14,7 @@ type GetMediaByIdRequest struct {
 	Id string `json:"id"`
 }
 
-func GetMediaByIdHandler(db *gorm.DB) http.HandlerFunc {
+func GetMediaByIdHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Добавляем CORS заголовки
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -66,22 +65,21 @@ func GetMediaByIdHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		var contentType string
-		switch media.ContentType {
-		case "mpga":
-			contentType = "audio/mpeg"
-		case "":
-			// Если тип не указан, пытаемся определить по расширению
-			if bytes.HasSuffix(media.FileData, []byte("ID3")) {
-				contentType = "audio/mpeg"
-			} else {
-				contentType = "application/octet-stream"
-			}
-		default:
-			contentType = media.ContentType
-		}
+		//var contentType string
+		//switch media.ContentType {
+		//case "mpga":
+		//	contentType = "audio/mpeg"
+		//case "":
+		//	// Если тип не указан, пытаемся определить по расширению
+		//	if bytes.HasSuffix(media.FileData, []byte("ID3")) {
+		//		contentType = "audio/mpeg"
+		//	} else {
+		//		contentType = "application/octet-stream"
+		//	}
+		//default:
+		//	contentType = media.ContentType
+		//}
 
-		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Content-Length", strconv.Itoa(len(media.FileData)))
 		w.Header().Set("Accept-Ranges", "bytes")
 

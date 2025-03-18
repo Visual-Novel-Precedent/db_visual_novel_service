@@ -3,10 +3,10 @@ package node
 import (
 	"db_novel_service/internal/services/node"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -16,7 +16,7 @@ type CreateNodeRequest struct {
 	Slug      string `json:"string"`
 }
 
-func CreateNodeHandler(db *gorm.DB) http.HandlerFunc {
+func CreateNodeHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Добавляем CORS заголовки
@@ -79,4 +79,8 @@ func CreateNodeHandler(db *gorm.DB) http.HandlerFunc {
 		// Отправляем ответ клиенту
 		json.NewEncoder(w).Encode(response)
 	}
+}
+
+type CreateNodeResponse struct {
+	Id string
 }

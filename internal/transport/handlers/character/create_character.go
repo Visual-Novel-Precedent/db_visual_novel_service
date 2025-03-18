@@ -3,10 +3,10 @@ package character
 import (
 	"db_novel_service/internal/services/character"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -15,7 +15,7 @@ type CreateCharacterRequest struct {
 	Slug string `json:"slug"`
 }
 
-func CreateCharacterHandler(db *gorm.DB) http.HandlerFunc {
+func CreateCharacterHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// Добавляем CORS заголовки

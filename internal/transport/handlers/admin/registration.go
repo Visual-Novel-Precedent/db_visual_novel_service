@@ -3,9 +3,9 @@ package admin
 import (
 	"db_novel_service/internal/services/admin"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -15,7 +15,7 @@ type AdminRegistrationRequest struct {
 	Password string `json:"password"`
 }
 
-func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
+func AdminRegistrationHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Добавляем CORS заголовки
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -60,4 +60,8 @@ func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		json.NewEncoder(w).Encode(response)
 	}
+}
+
+type Response struct {
+	id int64
 }
