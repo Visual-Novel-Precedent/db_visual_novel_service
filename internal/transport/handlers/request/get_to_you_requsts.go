@@ -3,9 +3,9 @@ package request
 import (
 	"db_novel_service/internal/services/request"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -14,7 +14,7 @@ type GetMyReceivedRequest struct {
 	Id int64 `json:"id"`
 }
 
-func GetReceivedRequestHandler(db *gorm.DB) http.HandlerFunc {
+func GetReceivedRequestHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {

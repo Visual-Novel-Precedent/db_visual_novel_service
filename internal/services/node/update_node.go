@@ -18,6 +18,7 @@ func UpdateNodeValue(
 	endFlag bool,
 	endResult string,
 	endText string,
+	comment string,
 	db *gorm.DB,
 ) error {
 	node, err := storage.SelectNodeWIthId(db, id)
@@ -44,7 +45,7 @@ func UpdateNodeValue(
 		newNode.Music = music
 	}
 
-	if background != 0 {
+	if background != 1 {
 		newNode.Background = background
 	}
 
@@ -63,6 +64,10 @@ func UpdateNodeValue(
 
 	if endText != "" {
 		newNode.End.EndText = endText
+	}
+
+	if comment != "" {
+		newNode.Comment = comment
 	}
 
 	log.Println(newNode.Events)

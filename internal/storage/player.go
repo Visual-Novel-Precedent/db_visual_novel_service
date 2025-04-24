@@ -12,6 +12,7 @@ import (
 )
 
 func RegisterPlayer(db *gorm.DB, player models.Player) (int64, error) {
+	log.Println(player)
 	// Проверка на пустой email
 	if strings.TrimSpace(player.Email) == "" {
 		return 0, errors.New("email не может быть пустым")

@@ -3,9 +3,9 @@ package request
 import (
 	"db_novel_service/internal/services/request"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -14,7 +14,7 @@ type RejectRequestRequest struct {
 	IdRequest string `json:"id_request"`
 }
 
-func RejectRequestHandler(db *gorm.DB) http.HandlerFunc {
+func RejectRequestHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("Получени запрос на отклонение запроса")
@@ -65,5 +65,7 @@ func RejectRequestHandler(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, "Failed to reject request", http.StatusInternalServerError)
 		}
+
+		log.Println("запрос успешно отклонен")
 	}
 }

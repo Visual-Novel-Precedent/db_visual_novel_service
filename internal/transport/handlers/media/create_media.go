@@ -3,11 +3,11 @@ package media
 import (
 	"db_novel_service/internal/services/media"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"strings"
@@ -17,7 +17,7 @@ type CreateMediaRequest struct {
 	File *multipart.FileHeader `json:"-"`
 }
 
-func CreateMediaHandler(db *gorm.DB) http.HandlerFunc {
+func CreateMediaHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("получен запрос на добавление медиа")
 
@@ -122,4 +122,8 @@ func CreateMediaHandler(db *gorm.DB) http.HandlerFunc {
 
 		json.NewEncoder(w).Encode(response)
 	}
+}
+
+type CreateMediaResponse struct {
+	id string
 }

@@ -228,6 +228,7 @@ func UpdateNode(db *gorm.DB, id int64, newNode models.Node) (models.Node, error)
 			"background": newNode.Background,
 			"branching":  json.RawMessage(branchingJSON),
 			"end_info":   json.RawMessage(endInfoJSON),
+			"comment":    newNode.Comment,
 		})
 
 	if result.RowsAffected == 0 {

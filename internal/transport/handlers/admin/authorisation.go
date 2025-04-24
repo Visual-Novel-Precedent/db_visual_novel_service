@@ -3,10 +3,10 @@ package admin
 import (
 	"db_novel_service/internal/services/admin"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -15,8 +15,9 @@ type UserAuthorisationRequest struct {
 	Password string `json:"password"`
 }
 
-func AdminAuthorisationHandler(db *gorm.DB) http.HandlerFunc {
+func AdminAuthorisationHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		// Добавляем CORS заголовки
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -85,7 +86,7 @@ func AdminAuthorisationHandler(db *gorm.DB) http.HandlerFunc {
 			"requestsReceived": user.RequestsReceived,
 		}
 
-		log.Println("все прошло упешно")
+		log.Println("все прошло упешно", "авторизация", user.AdminStatus)
 
 		// Отправляем ответ клиенту
 		w.Header().Set("Content-Type", "application/json")

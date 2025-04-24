@@ -4,10 +4,10 @@ import (
 	"db_novel_service/internal/models"
 	"db_novel_service/internal/services/request"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -16,7 +16,7 @@ type GetMyRequestsRequest struct {
 	Id string `json:"id"`
 }
 
-func GetMyRequestHandler(db *gorm.DB) http.HandlerFunc {
+func GetMyRequestHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("запрос на получение запросов получен")
 		// Добавляем CORS заголовки
@@ -86,11 +86,13 @@ func GetMyRequestHandler(db *gorm.DB) http.HandlerFunc {
 }
 
 type ResponseRequest struct {
-	Id                 string
-	Type               int
-	Status             int
-	RequestingAdmin    string
-	RequestedChapterId string
+	Id                     string
+	Type                   int
+	Status                 int
+	RequestingAdmin        string
+	RequestedChapterId     string
+	RequestingAdminName    string
+	RequestedChapterIdName string
 }
 
 func prepareRequestResponse(requests []models.Request) []ResponseRequest {
@@ -98,11 +100,13 @@ func prepareRequestResponse(requests []models.Request) []ResponseRequest {
 
 	for _, r := range requests {
 		res = append(res, ResponseRequest{
-			Id:                 utils.ToString(r.Id),
-			Type:               r.Type,
-			Status:             r.Status,
-			RequestingAdmin:    utils.ToString(r.RequestingAdmin),
-			RequestedChapterId: utils.ToString(r.RequestedChapterId),
+			Id:                     utils.ToString(r.Id),
+			Type:                   r.Type,
+			Status:                 r.Status,
+			RequestingAdmin:        utils.ToString(r.RequestingAdmin),
+			RequestedChapterId:     utils.ToString(r.RequestedChapterId),
+			RequestingAdminName:    r.RequestedAdminName,
+			RequestedChapterIdName: r.RequestedChapterName,
 		})
 	}
 

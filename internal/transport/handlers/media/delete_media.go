@@ -3,6 +3,7 @@ package media
 import (
 	"db_novel_service/internal/services/media"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
@@ -12,7 +13,7 @@ type DeleteMediaRequest struct {
 	Id int64 `json:"id"`
 }
 
-func DeleteMediaHandler(db *gorm.DB) http.HandlerFunc {
+func DeleteMediaHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {

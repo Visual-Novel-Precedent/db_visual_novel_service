@@ -3,7 +3,7 @@ package admin
 import (
 	"db_novel_service/internal/services/admin"
 	"encoding/json"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"net/http"
@@ -18,7 +18,7 @@ type ChangeAdminRequest struct {
 	CreatedChapters []int64 `json:"created_chapters,omitempty"`
 }
 
-func ChangeAdminHandler(db *gorm.DB) http.HandlerFunc {
+func ChangeAdminHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
@@ -48,7 +48,7 @@ func ChangeAdminHandler(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, "fail to change admin", http.StatusInternalServerError)
 		}
-		
+
 		log.Print(err)
 
 		// Формируем ответ

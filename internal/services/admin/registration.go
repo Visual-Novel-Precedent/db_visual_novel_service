@@ -16,14 +16,14 @@ const (
 
 	DefaultAdminStatus = -1
 
-	NoChapter                = -1
-	RegisterAdminTypeRequest = 1
+	NoChapter                = 0
+	RegisterAdminTypeRequest = 2
 )
 
 func Registration(email string, name string, password string, db *gorm.DB) (int64, error) {
-	_, err := storage.SelectAdminWIthEmail(db, email)
+	ad, err := storage.SelectAdminWIthEmail(db, email)
 
-	if err == nil {
+	if err != nil && ad.Email != "" {
 		return 0, errors.New("admin with this email is already exist")
 	}
 

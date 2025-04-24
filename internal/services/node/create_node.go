@@ -4,6 +4,7 @@ import (
 	"db_novel_service/internal/models"
 	"db_novel_service/internal/storage"
 	"gorm.io/gorm"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -11,6 +12,8 @@ import (
 func CreateNode(chapterId int64, slug string, db *gorm.DB) (int64, error) {
 
 	id := generateUniqueId()
+
+	log.Println("новый узел")
 
 	newNode := models.Node{
 		Id:        id,
@@ -21,6 +24,8 @@ func CreateNode(chapterId int64, slug string, db *gorm.DB) (int64, error) {
 		End:       models.EndInfo{},
 		Comment:   " ",
 	}
+
+	log.Println(newNode)
 
 	_, err := storage.RegisterNode(db, newNode)
 

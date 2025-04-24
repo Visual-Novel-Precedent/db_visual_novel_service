@@ -21,7 +21,7 @@ func RejectRequest(id int64, db *gorm.DB) error {
 
 	_, err = storage.DeleteRequest(db, id)
 
-	if request.Type == 1 {
+	if request.Type == RequestPublishChapter {
 		chapter, err := storage.SelectChapterWIthId(db, request.RequestedChapterId)
 
 		if err != nil {

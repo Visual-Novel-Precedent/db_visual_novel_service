@@ -19,6 +19,7 @@ type UpdateNodeRequest struct {
 	Background string         `json:"background,omitempty"`
 	Branching  Branching      `json:"branching,omitempty"`
 	End        EndInfo        `json:"end,omitempty"`
+	Comment    string         `json:"comment,omitempty"`
 }
 
 type EventR struct {
@@ -56,6 +57,8 @@ func UpdateNodeHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		log.Println("Получен запрос на изменение nodes")
+
 		// Проверяем, что это POST-запрос
 		if r.Method != http.MethodPost {
 			log.Println("в изменении nodes не тот метод", r.Method)
@@ -79,6 +82,8 @@ func UpdateNodeHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "Invalid JSON format", http.StatusBadRequest)
 			return
 		}
+
+		log.Println("боди обновления узла", req.End)
 
 		log.Printf("events, %s", req.Events)
 
@@ -199,6 +204,10 @@ func UpdateNodeHandler(db *gorm.DB) http.HandlerFunc {
 						}
 					}
 
+					if emition == 0 {
+						emition = 1
+					}
+
 					emPos[emition] = position
 					print("empos", emPos)
 				}
@@ -229,7 +238,7 @@ func UpdateNodeHandler(db *gorm.DB) http.HandlerFunc {
 
 		log.Println("events for update", events)
 
-		err = nodeM.UpdateNodeValue(id, req.Slug, events, music, background, req.Branching.Flag, condition, req.End.Flag, req.End.EndResult, req.End.EndText, db)
+		err = nodeM.UpdateNodeValue(id, req.Slug, events, music, background, req.Branching.Flag, condition, req.End.Flag, req.End.EndResult, req.End.EndText, req.Comment, db)
 
 		log.Println("node успешно обноален")
 

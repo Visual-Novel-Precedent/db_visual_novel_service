@@ -22,5 +22,15 @@ func GetMyRequests(id int64, db *gorm.DB) ([]models.Request, error) {
 
 	requests, err := storage.GetAllRequests(db)
 
-	return requests, err
+	var res []models.Request
+
+	if requests != nil {
+		for _, req := range requests {
+			if req.RequestingAdmin != id {
+				res = append(res, req)
+			}
+		}
+	}
+
+	return res, err
 }

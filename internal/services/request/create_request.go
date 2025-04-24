@@ -15,50 +15,58 @@ func CreateRequest(requestingAdminId int64, typeRequest int, requestedChapterId 
 
 	log.Println(requestingAdminId, typeRequest, requestedChapterId)
 
-	newRequest := models.Request{
-		Id:                 id,
-		Type:               typeRequest,
-		RequestingAdmin:    requestingAdminId,
-		RequestedChapterId: requestedChapterId,
+	admin, err := storage.SelectAdminWithId(db, requestingAdminId)
+
+	if err != nil {
+		log.Println("не удалось найти админа")
+		return 0, err
 	}
 
-	_, err := storage.RegisterRequest(db, newRequest)
+	var chapter models.Chapter
+
+	if requestedChapterId != 0 {
+		chapter, err = storage.SelectChapterWIthId(db, requestedChapterId)
+	}
+
+	newRequest := models.Request{
+		Id:                   id,
+		Type:                 typeRequest,
+		RequestingAdmin:      requestingAdminId,
+		RequestedAdminName:   admin.Name,
+		RequestedChapterId:   requestedChapterId,
+		RequestedChapterName: chapter.Name,
+	}
+
+	_, err = storage.RegisterRequest(db, newRequest)
 
 	if err != nil {
 		log.Println("ошибка регестрирования запроса")
 		return 0, err
 	}
 
-	admin, err := storage.SelectAdminWithId(db, requestingAdminId)
+	//admin.RequestSent = append(admin.RequestSent, id)
+	//
+	//_, err = storage.UpdateAdmin(db, admin.Id, admin)
+	//
+	//if err != nil {
+	//	return 0, err
+	//}
 
-	if err != nil {
-		log.Println("ошибка обноружения админа")
-		return 0, err
-	}
-
-	admin.RequestSent = append(admin.RequestSent, id)
-
-	_, err = storage.UpdateAdmin(db, admin.Id, admin)
-
-	if err != nil {
-		return 0, err
-	}
-
-	admins, err := storage.SelectAllSupeAdmins(db)
-
-	for _, admin := range admins {
-		ad, err := storage.SelectAdminWithId(db, admin.Id)
-
-		if err == nil {
-			ad.RequestsReceived = append(ad.RequestsReceived, id)
-		}
-
-		_, _ = storage.UpdateAdmin(db, admin.Id, ad)
-	}
+	//admins, err := storage.SelectAllSupeAdmins(db)
+	//
+	//for _, admin := range admins {
+	//	ad, err := storage.SelectAdminWithId(db, admin.Id)
+	//
+	//	if err == nil {
+	//		ad.RequestsReceived = append(ad.RequestsReceived, id)
+	//	}
+	//
+	//	_, _ = storage.UpdateAdmin(db, admin.Id, ad)
+	//}
 
 	log.Println(typeRequest, "typeRequest")
 
-	if typeRequest == 1 && requestedChapterId != 0 {
+	if typeRequest == 2 && requestedChapterId != 0 {
 
 		chapter, err := storage.SelectChapterWIthId(db, requestedChapterId)
 

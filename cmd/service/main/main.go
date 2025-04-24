@@ -10,6 +10,7 @@ import (
 	"db_novel_service/internal/transport/handlers/node"
 	player_ "db_novel_service/internal/transport/handlers/player"
 	"db_novel_service/internal/transport/handlers/request"
+	"db_novel_service/pkg/atlas"
 	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 	"log"
@@ -33,27 +34,37 @@ const (
 )
 
 func main() {
-	//migrator.AutoMigrate()
 
 	service := run()
 
-	//generateSQLMetadata(service.DB)
+	log.Println(service.Config.Port)
+
+	correctDB := atlas.StartAtlasSchemaValidation()
+
+	if !correctDB {
+		service.Log.Error().Msg("ошибка валидации схемы базы данных")
+		return
+	} else {
+		service.Log.Info().Msg("валидация схем баз данных прошла успешно")
+	}
+
+	generateSQLMetadata(service.DB) // наглядный вывод информации по бд
 
 	service.Router.HandleFunc("/create-chapter", func(w http.ResponseWriter, r *http.Request) {
-		handler := chapter.CreateChapterHandler(service.DB)
+		handler := chapter.CreateChapterHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/update-chapter", func(w http.ResponseWriter, r *http.Request) {
-		handler := chapter.UpdateChapterHandler(service.DB)
+		handler := chapter.UpdateChapterHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/get-chapters", func(w http.ResponseWriter, r *http.Request) {
-		handler := chapter.GetChaptersByUserIdHandler(service.DB)
+		handler := chapter.GetChaptersByUserIdHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 
 	service.Router.HandleFunc("/create-node", func(w http.ResponseWriter, r *http.Request) {
-		handler := node.CreateNodeHandler(service.DB)
+		handler := node.CreateNodeHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/update-node", func(w http.ResponseWriter, r *http.Request) {
@@ -61,100 +72,104 @@ func main() {
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/delete-node", func(w http.ResponseWriter, r *http.Request) {
-		handler := node.DeleteNodeHandler(service.DB)
+		handler := node.DeleteNodeHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/get-nodes-by-chapter", func(w http.ResponseWriter, r *http.Request) {
-		handler := node.GetNodeByChapterIdHandler(service.DB)
+		handler := node.GetNodeByChapterIdHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/get-node-by-id", func(w http.ResponseWriter, r *http.Request) {
-		handler := node.GetNodeByIdHandler(service.DB)
+		handler := node.GetNodeByIdHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 
 	service.Router.HandleFunc("/admin-authorization", func(w http.ResponseWriter, r *http.Request) {
-		handler := admin.AdminAuthorisationHandler(service.DB)
+		handler := admin.AdminAuthorisationHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/admin-registration", func(w http.ResponseWriter, r *http.Request) {
-		handler := admin.AdminRegistrationHandler(service.DB)
+		handler := admin.AdminRegistrationHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/admin-change", func(w http.ResponseWriter, r *http.Request) {
-		handler := admin.ChangeAdminHandler(service.DB)
+		handler := admin.ChangeAdminHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 
 	service.Router.HandleFunc("/player-authorization", func(w http.ResponseWriter, r *http.Request) {
-		handler := player_.PlayerAuthorisationHandler(service.DB)
+		handler := player_.PlayerAuthorisationHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/player-registration", func(w http.ResponseWriter, r *http.Request) {
-		handler := player_.PlayerRegistrationHandler(service.DB)
+		handler := player_.PlayerRegistrationHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/player-update-chapter-progress", func(w http.ResponseWriter, r *http.Request) {
-		handler := player_.PlayerChapterProgressHandler(service.DB)
+		handler := player_.PlayerChapterProgressHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/player-update", func(w http.ResponseWriter, r *http.Request) {
-		handler := player_.ChangePlayerRequestHandler(service.DB)
+		handler := player_.ChangePlayerRequestHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/get-player", func(w http.ResponseWriter, r *http.Request) {
-		handler := player_.GetPlayerByIdHandler(service.DB)
+		handler := player_.GetPlayerByIdHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 
 	service.Router.HandleFunc("/approve-request", func(w http.ResponseWriter, r *http.Request) {
-		handler := request.ApproveRequestHandler(service.DB)
+		handler := request.ApproveRequestHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/create-request", func(w http.ResponseWriter, r *http.Request) {
-		handler := request.CreateRequestHandler(service.DB)
+		handler := request.CreateRequestHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/my-requests", func(w http.ResponseWriter, r *http.Request) {
-		handler := request.GetMyRequestHandler(service.DB)
+		handler := request.GetMyRequestHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/to-me-requests", func(w http.ResponseWriter, r *http.Request) {
-		handler := request.GetReceivedRequestHandler(service.DB)
+		handler := request.GetReceivedRequestHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/reject-request", func(w http.ResponseWriter, r *http.Request) {
-		handler := request.RejectRequestHandler(service.DB)
+		handler := request.RejectRequestHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 
 	service.Router.HandleFunc("/create-character", func(w http.ResponseWriter, r *http.Request) {
-		handler := character.CreateCharacterHandler(service.DB)
+		handler := character.CreateCharacterHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/update-character", func(w http.ResponseWriter, r *http.Request) {
-		handler := character.UpdateCharacterHandler(service.DB)
+		handler := character.UpdateCharacterHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/get-characters", func(w http.ResponseWriter, r *http.Request) {
-		handler := character.GetCharacterHandler(service.DB)
+		handler := character.GetCharacterHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 
 	service.Router.HandleFunc("/create-media", func(w http.ResponseWriter, r *http.Request) {
-		handler := media.CreateMediaHandler(service.DB)
+		handler := media.CreateMediaHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/get-media-by-id", func(w http.ResponseWriter, r *http.Request) {
-		handler := media.GetMediaByIdHandler(service.DB)
+		handler := media.GetMediaByIdHandler(service.DB, service.Log)
+		handler.ServeHTTP(w, r)
+	})
+	service.Router.HandleFunc("/get-media-with-id", func(w http.ResponseWriter, r *http.Request) {
+		handler := media.GetMediaByIdGetHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/get-media", func(w http.ResponseWriter, r *http.Request) {
-		handler := media.GetMediaHandler(service.DB)
+		handler := media.GetMediaHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 	service.Router.HandleFunc("/delete-media", func(w http.ResponseWriter, r *http.Request) {
-		handler := media.DeleteMediaHandler(service.DB)
+		handler := media.DeleteMediaHandler(service.DB, service.Log)
 		handler.ServeHTTP(w, r)
 	})
 

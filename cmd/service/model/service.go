@@ -17,6 +17,29 @@ type Service struct {
 	Config *config.Config
 }
 
+type ServiceGetter interface {
+	GetLogger() *zerolog.Logger
+	GetRouter() *mux.Router
+	GetDB() *gorm.DB
+	GetConfig() *config.Config
+}
+
+func (s *Service) GetLogger() *zerolog.Logger {
+	return s.Log
+}
+
+func (s *Service) GetRouter() *mux.Router {
+	return s.Router
+}
+
+func (s *Service) GetDB() *gorm.DB {
+	return s.DB
+}
+
+func (s *Service) GetConfig() *config.Config {
+	return s.Config
+}
+
 func NewService() *Service {
 	logger := log.NewLogger()
 

@@ -4,6 +4,7 @@ import (
 	"db_novel_service/internal/models"
 	"db_novel_service/internal/services/node"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"log"
@@ -15,7 +16,7 @@ type GetNodeByChapterIdRequest struct {
 	ChapterId string `json:"chapter_id"`
 }
 
-func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {
+func GetNodeByChapterIdHandler(db *gorm.DB, logger *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("Получен запрос на получение nodes")
@@ -52,11 +53,13 @@ func GetNodeByChapterIdHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		log.Println(req)
+
 		id, err := strconv.ParseInt(req.ChapterId, 10, 64)
 
 		if err != nil {
 			if err != nil {
-				log.Println("ошибка конвертации")
+				log.Println("ошибка конвертации", err)
 				http.Error(w, "Failed to covert id", http.StatusInternalServerError)
 				return
 			}

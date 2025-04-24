@@ -4,6 +4,7 @@ import (
 	"db_novel_service/internal/models"
 	"db_novel_service/internal/services/chapter"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"io/ioutil"
@@ -16,7 +17,7 @@ type GetChaptersByUserIdRequest struct {
 	UserId string `json:"user_id"`
 }
 
-func GetChaptersByUserIdHandler(db *gorm.DB) http.HandlerFunc {
+func GetChaptersByUserIdHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Добавляем CORS заголовки
 		w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -44,6 +45,8 @@ func GetChaptersByUserIdHandler(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
+		log.Println("")
+
 		// Разбираем JSON
 		err = json.Unmarshal(body, &req)
 		if err != nil {
@@ -64,6 +67,7 @@ func GetChaptersByUserIdHandler(db *gorm.DB) http.HandlerFunc {
 		chapters, err := chapter.GetChaptersByUserId(db, id)
 
 		if err != nil {
+			log.Println("fail to get chapters")
 			http.Error(w, "fail to get chapters", http.StatusInternalServerError)
 			return // Добавлен return
 		}
@@ -123,4 +127,14 @@ func prepareChaptersForResponce(chapters []models.Chapter) []ResponceChapter {
 	log.Println(len(res))
 
 	return res
+}
+
+type ResponseChapter struct {
+	Id         string `json:"id"`
+	Name       string
+	StartNode  string
+	Nodes      []string
+	Characters []string
+	Status     int
+	Author     string
 }

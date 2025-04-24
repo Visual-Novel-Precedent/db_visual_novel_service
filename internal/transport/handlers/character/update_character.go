@@ -3,9 +3,9 @@ package character
 import (
 	"db_novel_service/internal/services/character"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -18,7 +18,7 @@ type UpdateCharacterRequest struct {
 	Emotions map[string]string `json:"emotions,omitempty"`
 }
 
-func UpdateCharacterHandler(db *gorm.DB) http.HandlerFunc {
+func UpdateCharacterHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("получен запрос на обновление персонажа 1")
 		// Добавляем CORS заголовки

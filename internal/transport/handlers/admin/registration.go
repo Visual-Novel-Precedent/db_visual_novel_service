@@ -3,6 +3,7 @@ package admin
 import (
 	"db_novel_service/internal/services/admin"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
 	"log"
@@ -15,8 +16,10 @@ type AdminRegistrationRequest struct {
 	Password string `json:"password"`
 }
 
-func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
+func AdminRegistrationHandler(db *gorm.DB, loggger *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		log.Println("Получен запрос на регистрацию админа")
 		// Добавляем CORS заголовки
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -45,12 +48,14 @@ func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
 
 		err = json.Unmarshal(body, &req)
 		if err != nil {
+			log.Println(err)
 			http.Error(w, "Invalid JSON format", http.StatusBadRequest)
 			return
 		}
 
 		id, err := admin.Registration(req.Email, req.Name, req.Password, db)
 		if err != nil {
+			log.Println(err)
 			http.Error(w, "fail to register admin", http.StatusInternalServerError)
 			return
 		}
@@ -60,4 +65,8 @@ func AdminRegistrationHandler(db *gorm.DB) http.HandlerFunc {
 		}
 		json.NewEncoder(w).Encode(response)
 	}
+}
+
+type Response struct {
+	id int64
 }

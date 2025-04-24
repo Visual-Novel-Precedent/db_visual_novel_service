@@ -3,9 +3,9 @@ package request
 import (
 	"db_novel_service/internal/services/request"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -14,8 +14,10 @@ type ApproveRequestRequest struct {
 	IdRequest string `json:"id_request"`
 }
 
-func ApproveRequestHandler(db *gorm.DB) http.HandlerFunc {
+func ApproveRequestHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		log.Println("получен запрос на аппрув запроса")
 		// Добавляем CORS заголовки
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -65,5 +67,7 @@ func ApproveRequestHandler(db *gorm.DB) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, "Failed to approve request", http.StatusInternalServerError)
 		}
+
+		log.Println("запрос успешно удобрен")
 	}
 }

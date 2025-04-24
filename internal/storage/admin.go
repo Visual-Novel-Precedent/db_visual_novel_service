@@ -171,10 +171,82 @@ func SelectAdminWithId(db *gorm.DB, id int64) (models.Admin, error) {
 
 func SelectAllSupeAdmins(db *gorm.DB) ([]models.Admin, error) {
 	var admins []models.Admin
-	result := db.Where("admin_status = ?", 1).Find(&admins)
 
-	if result.RowsAffected == 0 {
-		return nil, errors.New("no super admin found")
+	// Используем raw SQL с явной обработкой JSON полей
+	query := `
+        SELECT 
+            id,
+            name,
+            email,
+            password,
+            admin_status,
+            COALESCE(created_chapters::TEXT, '[]') as created_chapters_raw,
+            COALESCE(request_sent::TEXT, '[]') as request_sent_raw,
+            COALESCE(requests_received::TEXT, '[]') as requests_received_raw
+        FROM admins
+        WHERE admin_status = $1
+    `
+
+	rows, err := db.Raw(query, 1).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var admin models.Admin
+
+		// Декларируем переменные для JSON полей
+		var (
+			createdChaptersRaw  sql.NullString
+			requestSentRaw      sql.NullString
+			requestsReceivedRaw sql.NullString
+		)
+
+		err = rows.Scan(
+			&admin.Id,
+			&admin.Name,
+			&admin.Email,
+			&admin.Password,
+			&admin.AdminStatus,
+			&createdChaptersRaw,
+			&requestSentRaw,
+			&requestsReceivedRaw,
+		)
+
+		if err != nil {
+			return nil, fmt.Errorf("error scanning admin data: %w", err)
+		}
+
+		// Обрабатываем JSON поля
+		if createdChaptersRaw.Valid {
+			err = json.Unmarshal([]byte(createdChaptersRaw.String), &admin.CreatedChapters)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal created_chapters: %w", err)
+			}
+		} else {
+			admin.CreatedChapters = []int64{}
+		}
+
+		if requestSentRaw.Valid {
+			err = json.Unmarshal([]byte(requestSentRaw.String), &admin.RequestSent)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal request_sent: %w", err)
+			}
+		} else {
+			admin.RequestSent = []int64{}
+		}
+
+		if requestsReceivedRaw.Valid {
+			err = json.Unmarshal([]byte(requestsReceivedRaw.String), &admin.RequestsReceived)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal requests_received: %w", err)
+			}
+		} else {
+			admin.RequestsReceived = []int64{}
+		}
+
+		admins = append(admins, admin)
 	}
 
 	return admins, nil

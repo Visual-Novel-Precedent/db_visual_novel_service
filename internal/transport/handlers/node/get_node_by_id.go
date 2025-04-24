@@ -4,9 +4,9 @@ import (
 	"db_novel_service/internal/services/node"
 	"db_novel_service/internal/transport/handlers/character"
 	"encoding/json"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -15,7 +15,7 @@ type GetNodeByIdRequest struct {
 	Node string `json:"id"`
 }
 
-func GetNodeByIdHandler(db *gorm.DB) http.HandlerFunc {
+func GetNodeByIdHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("Полуыен запрос на получение node")
@@ -78,6 +78,8 @@ func GetNodeByIdHandler(db *gorm.DB) http.HandlerFunc {
 		if node != nil {
 			nodesRes = convertToResponseNode(*node)
 		}
+
+		log.Println("nodesRes", nodesRes.End)
 
 		// Формируем ответ
 		response := map[string]interface{}{

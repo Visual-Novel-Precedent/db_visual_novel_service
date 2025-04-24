@@ -75,8 +75,10 @@ func GetNodesById(
 		}
 
 		for j, k := range mediaRes {
-			if k.Id == 0 {
-				mediaRes = append(mediaRes[:j], mediaRes[j+1:]...)
+			if j+1 < len(mediaRes) {
+				if k.Id == 0 {
+					mediaRes = append(mediaRes[:j], mediaRes[j+1:]...)
+				}
 			}
 		}
 	}
