@@ -7,7 +7,7 @@ type Player struct {
 	Phone             string
 	Password          string
 	Admin             bool
-	CompletedChapters []int64         `gorm:"type:json;column:completed_chapters"` // пройденные главы
-	ChaptersProgress  map[int64]int64 `gorm:"type:json;column:chapters_progress"`  // Мапа id главы - id узла
+	CompletedChapters []int64         `gorm:"type:json;column:completed_chapters"`                // пройденные главы
+	ChaptersProgress  map[int64]int64 `gorm:"type:json;column:chapters_progress;serializer:json"` // Мапа id главы - id узла
 	SoundSettings     int             //percent
 }

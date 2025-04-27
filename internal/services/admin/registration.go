@@ -23,7 +23,7 @@ const (
 func Registration(email string, name string, password string, db *gorm.DB) (int64, error) {
 	ad, err := storage.SelectAdminWIthEmail(db, email)
 
-	if err != nil && ad.Email != "" {
+	if err != nil && ad.Id != 0 {
 		return 0, errors.New("admin with this email is already exist")
 	}
 
