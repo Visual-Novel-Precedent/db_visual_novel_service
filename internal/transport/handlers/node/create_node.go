@@ -14,6 +14,7 @@ import (
 type CreateNodeRequest struct {
 	ChapterId string `json:"chapter_id"`
 	Slug      string `json:"slug"`
+	ParentId  string `json:"parent"`
 }
 
 func CreateNodeHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
@@ -61,7 +62,17 @@ func CreateNodeHandler(db *gorm.DB, log *zerolog.Logger) http.HandlerFunc {
 			}
 		}
 
-		id, err := node.CreateNode(idC, req.Slug, db)
+		idP, err := strconv.ParseInt(req.ParentId, 10, 64)
+
+		if err != nil {
+			if err != nil {
+				log.Println("ошибка конвертации")
+				http.Error(w, "Failed to covert id", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		id, err := node.CreateNode(idC, req.Slug, idP, db)
 
 		log.Println(err)
 

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func CreateNode(chapterId int64, slug string, db *gorm.DB) (int64, error) {
+func CreateNode(chapterId int64, slug string, parentId int64, db *gorm.DB) (int64, error) {
 
 	id := generateUniqueId()
 
@@ -27,12 +27,6 @@ func CreateNode(chapterId int64, slug string, db *gorm.DB) (int64, error) {
 
 	log.Println(newNode)
 
-	_, err := storage.RegisterNode(db, newNode)
-
-	if err != nil {
-		return 0, err
-	}
-
 	chapter, err := storage.SelectChapterWIthId(db, chapterId)
 
 	if err != nil {
@@ -41,9 +35,43 @@ func CreateNode(chapterId int64, slug string, db *gorm.DB) (int64, error) {
 
 	chapter.Nodes = append(chapter.Nodes, id)
 
-	_, err = storage.UpdateChapter(db, chapterId, chapter)
-
 	if err != nil {
+		return 0, err
+	}
+
+	if parentId != -1 {
+		log.Println("id родителя", parentId)
+		parent, err := storage.SelectNodeWIthId(db, parentId)
+
+		if err == nil && parent != nil {
+			if parent.Branching.Flag && parent.Branching.Condition != nil {
+				parent.Branching.Condition[slug] = id
+			} else {
+				parent.Branching.Flag = true
+				parent.Branching.Condition = make(map[string]int64)
+				parent.Branching.Condition[slug] = id
+			}
+		} else {
+			log.Println("ошибка нахождения родителя", err, parent)
+			return 0, err
+		}
+
+		_, err = storage.UpdateNode(db, parentId, *parent)
+		if err != nil {
+			log.Println("ошибка при обновлении node")
+			return 0, err
+		}
+	}
+
+	_, err = storage.UpdateChapter(db, chapterId, chapter)
+	if err != nil {
+		log.Println("ошибка при обновлнии главы")
+		return 0, err
+	}
+
+	_, err = storage.RegisterNode(db, newNode)
+	if err != nil {
+		log.Println("ошибка при регистрации узла ")
 		return 0, err
 	}
 

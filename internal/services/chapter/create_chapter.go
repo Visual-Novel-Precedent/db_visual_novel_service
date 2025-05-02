@@ -37,7 +37,7 @@ func CreateDefaultChapter(authorId int64, db *gorm.DB) (int64, int64, error) {
 		Slug: "Начало истории",
 	}
 
-	nodeId, err := node.CreateNode(id, newNode.Slug, db)
+	nodeId, err := node.CreateNode(id, newNode.Slug, -1, db)
 
 	log.Println("id начального узла", nodeId)
 
