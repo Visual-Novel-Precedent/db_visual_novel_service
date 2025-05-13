@@ -69,6 +69,10 @@ func PlayerAuthorisationHandler(db *gorm.DB, logger *zerolog.Logger) http.Handle
 			http.Error(w, "error to get user", http.StatusInternalServerError)
 		}
 
+		if player == nil {
+			http.Error(w, "error to get user", http.StatusForbidden)
+		}
+
 		// Формируем ответ
 		response := map[string]interface{}{
 			"Id":   utils.ToString(player.Id),
